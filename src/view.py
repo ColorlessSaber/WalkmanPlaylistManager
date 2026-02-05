@@ -77,6 +77,12 @@ class View(qtw.QWidget):
 
         # Songs in playlist view section
         lbl_songs_in_playlist = qtw.QLabel("Songs in Playlist", self)
+        lbl_songs_in_playlist.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                text-decoration: underline;
+            }   
+        """)
         self.table_songs_in_playlist_view = qtw.QTableView(self)
         self.table_songs_in_playlist_view.setSortingEnabled(False)
         self.table_songs_in_playlist_model = PlaylistTable(
@@ -90,7 +96,13 @@ class View(qtw.QWidget):
         layout_songs_in_playlist.addWidget(self.table_songs_in_playlist_view)
 
         # Music folder view section
-        lbl_music_folder = qtw.QLabel("Music Folder:", self)
+        lbl_music_folder = qtw.QLabel("Music Folder", self)
+        lbl_music_folder.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                text-decoration: underline;
+            }   
+        """)
         self.table_music_folder_view = qtw.QTableView(self)
         self.table_music_folder_view.setSortingEnabled(False)
         self.table_music_folder_model = MusicFolderTable(
@@ -205,7 +217,7 @@ class View(qtw.QWidget):
         :param music_folder_info: An object that holds information about the Walkman MUSIC folder.
         :return:
         """
-        print(music_folder_info)
+        print(music_folder_info) #TODO add in code to update the screen information
 
     @qtc.Slot(int)
     def update_progress_bar(self, progress_value: int) -> None:
