@@ -3,6 +3,7 @@ from PySide6 import (
 )
 
 from .view import View
+from .model import Model
 
 class MainWindow(qtw.QMainWindow):
     """The main window for the application"""
@@ -11,12 +12,21 @@ class MainWindow(qtw.QMainWindow):
         super().__init__()
 
         self.view = View()
+        self.model = Model()
         self.setCentralWidget(self.view)
         self.setMinimumSize(
             800, # width
             600  # height
         )
         self.setWindowTitle("Walkman Playlist Manager")
+
+        # view signals that connect to the model slots
+        self.view.signal_initiate_scan_of_music_folder.connect(self.model.start_scan_of_music_folder_thread)
+
+        # model signals that connect to the view slots
+        self.model.signal_analysis_of_music_folder.connect(self.view.update_screen_information)
+        self.model.signal_update_progress.connect(self.view.update_progress_bar)
+        self.model.signal_error_message.connect(self.view.messagebox_system_error_detected)
 
         self.show()
 
