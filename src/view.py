@@ -2,7 +2,6 @@ from typing import Any
 from PySide6 import (
     QtWidgets as qtw,
     QtCore as qtc,
-    QtGui as qtg,
 )
 from .pyside_table_object import GenericTable
 
@@ -34,13 +33,17 @@ class MusicFolderTable(GenericTable):
 class View(qtw.QWidget):
     """The front-end of the program"""
 
+    signal_initiate_scan_of_music_folder = qtc.Signal(str)
+
     def __init__(self):
         super().__init__()
 
         # Walkman MUSIC folder selection section
         lbl_walkman_music_folder = qtw.QLabel("Walkman Music Folder:", self)
         self.le_walkman_music_folder = qtw.QLineEdit(self)
+        self.le_walkman_music_folder.returnPressed.connect(self.user_pasted_in_directory)
         self.btn_select_walkman_music_folder = qtw.QPushButton("Select Folder", self)
+        self.btn_select_walkman_music_folder.clicked.connect(self.select_walkman_music_folder)
         layout_walkman_music_folder = qtw.QHBoxLayout()
         layout_walkman_music_folder.addWidget(lbl_walkman_music_folder)
         layout_walkman_music_folder.addWidget(self.le_walkman_music_folder)
@@ -53,6 +56,7 @@ class View(qtw.QWidget):
             insertPolicy=qtw.QComboBox.InsertPolicy.InsertAtBottom
         )
         self.cb_playlist_selection.addItem('New Playlist', 'new_playlist')
+        self.cb_playlist_selection.currentIndexChanged.connect(self.playlist_selection_changed)
         lbl_playlist_name = qtw.QLabel("Playlist Name:", self)
         self.le_playlist_name = qtw.QLineEdit(self)
 
@@ -67,7 +71,7 @@ class View(qtw.QWidget):
                 border: 2px solid grey;
                 border-radius: 5px;
                 padding-top: 16px;
-                front-weight: bold;
+                font-weight: bold;
             }
         """)
 
@@ -101,9 +105,14 @@ class View(qtw.QWidget):
 
         # Buttons and progress bar section
         self.btn_save_button = qtw.QPushButton("Save", self)
+        self.btn_save_button.clicked.connect(self.save_playlist)
         self.btn_delete_button = qtw.QPushButton("Delete", self)
+        self.btn_delete_button.clicked.connect(self.delete_playlist)
         self.btn_cancel_button = qtw.QPushButton("Cancel", self)
+        self.btn_cancel_button.clicked.connect(self.cancel)
         self.progress_bar = qtw.QProgressBar(self)
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
 
         layout_buttons_and_progress = qtw.QHBoxLayout()
         layout_buttons_and_progress.addWidget(self.btn_save_button)
@@ -124,3 +133,113 @@ class View(qtw.QWidget):
 
         self.setLayout(main_layout)
 
+    @qtc.Slot()
+    def save_playlist(self):
+        """
+        Saves the playlist to the Walkman MUSIC folder.
+
+        :return:
+        """
+        print("Saving Playlist")
+
+    @qtc.Slot()
+    def delete_playlist(self):
+        """
+        Deletes the playlist from Walkman MUSIC folder.
+
+        :return:
+        """
+        print("Deleting Playlist")
+
+    @qtc.Slot()
+    def cancel(self):
+        """
+        Cancels all changes made to the playlist.
+
+        :return:
+        """
+        print("Canceling changes to playlist")
+
+
+    @qtc.Slot()
+    def select_walkman_music_folder(self) -> None:
+        """
+        Opens a file dialog window to allow user to select their Walkman MUSIC folder.
+
+        :return:
+        """
+        directory = qtw.QFileDialog.getExistingDirectory(
+            self,
+            'Select folder...',
+            qtc.QDir.homePath()
+        )
+
+        if directory:
+            self.signal_initiate_scan_of_music_folder.emit(directory)
+
+    @qtc.Slot()
+    def user_pasted_in_directory(self) -> None:
+        """
+        Runs when the user pastes in the directory they wish to scan and hits enter.
+
+        :return:
+        """
+        self.signal_initiate_scan_of_music_folder.emit(self.le_walkman_music_folder.text())
+
+    @qtc.Slot()
+    def playlist_selection_changed(self, combo_index: int) -> None:
+        """
+        Runs when the user selects a different option from the combo-box.
+
+        :param combo_index: The index of the combo-box.
+        :return:
+        """
+        print(f"{combo_index} selected")
+
+    @qtc.Slot(object)
+    def update_screen_information(self, music_folder_info):
+        """
+        Takes the given music_folder_info, unloads the information stored inside it and
+        update the screen information.
+
+        :param music_folder_info: An object that holds information about the Walkman MUSIC folder.
+        :return:
+        """
+        print(music_folder_info)
+
+    @qtc.Slot(int)
+    def update_progress_bar(self, progress_value: int) -> None:
+        """
+        Updates the screen progress bar.
+
+        :param progress_value: The value to set the progress bar to.
+        :return:
+        """
+        self.progress_bar.setValue(progress_value)
+
+    @qtc.Slot()
+    def reset_progress_bar(self) -> None:
+        """
+        Resets the screen progress bar.
+
+        :return:
+        """
+        self.progress_bar.reset()
+
+# *** Method(s) that launch a messagebox ***
+
+    @qtc.Slot()
+    def messagebox_system_error_detected(self) -> None:
+        """
+        Launches the messagebox to inform the user a system error had occurred.
+
+        :return:
+        """
+        response = qtw.QMessageBox.critical(
+            self,
+            'System Error',
+            'The program ran into an error while working a process.'
+        )
+
+        if response == qtw.QMessageBox.StandardButton.Ok:
+            self.reset_progress_bar()
