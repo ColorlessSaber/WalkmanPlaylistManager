@@ -1,6 +1,6 @@
-import re
 from PySide6 import QtCore as qtc
 from .threads import ScanMusicFolderThread
+from .functions import find_songs_in_playlist
 
 class Model(qtc.QObject):
     """The back-end of the application."""
@@ -17,17 +17,14 @@ class Model(qtc.QObject):
     @qtc.Slot(str)
     def read_in_playlist(self, playlist_path: str) -> None:
         """
-        Opens the playlist, reads the songs in the playlist, save them to a list and send it to back.
+        Opens the playlist; reads the songs in the playlist; and save each song in a list where each entry is
+        the song's artist, album, and name.
 
         :param playlist_path: Path to the playlist.
         :return:
         """
-        playlist_markers = re.compile(r"^#EXT\w+") # markers used in Walkman playlists
-        with open(playlist_path, "r") as file:
-            clean_list_of_songs = [line_item.strip() for line_item in file.readlines()
-                                   if not playlist_markers.match(line_item)]
-        # TODO separate artist, album, and song per entry in clean_list_of_songs.
-        self.signal_analysis_of_playlist.emit(clean_list_of_songs)
+        songs_in_playlist = find_songs_in_playlist(playlist_path)
+        self.signal_analysis_of_playlist.emit(songs_in_playlist)
 
 # *** Methods that use threads to complete a task ***
     @qtc.Slot(str)

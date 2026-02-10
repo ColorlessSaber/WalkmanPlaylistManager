@@ -1,4 +1,4 @@
-import os
+import pathlib
 from typing import Any
 from PySide6 import (
     QtWidgets as qtw,
@@ -12,7 +12,7 @@ class PlaylistTable(GenericTable):
         """Insert rows into the table"""
         self.beginInsertRows(parent, position, position + rows - 1)
         for item in data:
-            self._data.insert(position, [item]) # the PySide table needs a list of what to fill the row(s), hence the []
+            self._data.insert(position, item)
         self.endInsertRows()
 
     def extract_data(self) -> list[Any]:
@@ -243,7 +243,8 @@ class View(qtw.QWidget):
             else:
                 self.le_playlist_name.setEnabled(False)
                 self.le_playlist_name.setText(self.cb_playlist_selection.currentText().replace(".M3U8", ""))
-                self.signal_initiate_scan_of_playlist.emit(os.path.join(self.le_walkman_music_folder.text(), self.cb_playlist_selection.currentText()))
+                music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
+                self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
 
     @qtc.Slot(object)
     def update_screen_information(self, music_folder_info):
@@ -288,6 +289,7 @@ class View(qtw.QWidget):
             rows=len(songs_list),
             data=songs_list
         )
+        self.table_songs_in_playlist_view.resizeColumnsToContents()
 
     @qtc.Slot(int)
     def update_progress_bar(self, progress_value: int) -> None:
