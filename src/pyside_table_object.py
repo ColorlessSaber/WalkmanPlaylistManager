@@ -64,6 +64,7 @@ class GenericTable(qtc.QAbstractTableModel):
             return super().headerData(section, orientation, role)
 
     def insertRows(self, position, rows, parent=qtc.QModelIndex()) -> None:
+        """Insert rows into the table"""
         self.beginInsertRows(parent, position, position + rows - 1)
         for i in range(rows):
             default_row = [''] * len(self._headers)
@@ -71,7 +72,14 @@ class GenericTable(qtc.QAbstractTableModel):
         self.endInsertRows()
 
     def removeRows(self, position, rows, parent=qtc.QModelIndex()) -> None:
+        """Remove rows from the table"""
         self.beginRemoveRows(parent, position, position + rows - 1)
         for i in range(rows):
             del(self._data[position])
         self.endRemoveRows()
+
+    def clear(self) -> None:
+        """Clear the table"""
+        self.beginResetModel()
+        self._data.clear()
+        self.endResetModel()

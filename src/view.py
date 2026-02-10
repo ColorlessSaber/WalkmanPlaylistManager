@@ -232,10 +232,7 @@ class View(qtw.QWidget):
             self.table_music_folder_view.setEnabled(True)
 
             if not self.table_songs_in_playlist_model.is_table_empty():
-                self.table_songs_in_playlist_model.removeRows(
-                    position=0,
-                    rows=self.table_music_folder_model.rowCount()
-                )
+                self.table_songs_in_playlist_model.clear()
 
             if combo_index == 1:
                 self.le_playlist_name.setEnabled(True)
@@ -259,10 +256,8 @@ class View(qtw.QWidget):
         self.cb_playlist_selection.clear()
         self.cb_playlist_selection.addItems(['---', 'New Playlist'])
 
-        self.table_music_folder_model.removeRows(
-            position=0,
-            rows=self.table_music_folder_model.rowCount()
-        )
+        self.table_music_folder_model.clear()
+        self.table_songs_in_playlist_model.clear()
 
         # add in new information
         for playlist in music_folder_info['playlists']:
