@@ -15,8 +15,8 @@ class MainWindow(qtw.QMainWindow):
         self.model = Model()
         self.setCentralWidget(self.view)
         self.setMinimumSize(
-            800, # width
-            600  # height
+            1600, # width
+            1200  # height
         )
         self.setWindowTitle("Walkman Playlist Manager")
 
