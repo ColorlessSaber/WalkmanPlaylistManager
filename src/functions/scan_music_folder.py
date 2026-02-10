@@ -1,4 +1,4 @@
-import os
+import pathlib
 from typing import Callable
 from PySide6 import QtCore as qtc
 
@@ -19,11 +19,10 @@ def scan_music_folder(
         'music_folders': [],
     }
     progress_signal.emit(40)
-    with os.scandir(music_folder_dir_path) as directory_iterator: # TODO replace os with pathlib
-        for entry in directory_iterator:
-            if entry.is_file() and playlist_file_condition(entry.name):
-                playlists_and_music_folders['playlists'].append(entry.name)
-            elif entry.is_dir():
-                playlists_and_music_folders['music_folders'].append(entry.name)
+    for entry in pathlib.Path(music_folder_dir_path).iterdir():
+        if entry.is_file() and playlist_file_condition(entry.name):
+            playlists_and_music_folders['playlists'].append(entry.name)
+        elif entry.is_dir():
+            playlists_and_music_folders['music_folders'].append(entry.name)
     progress_signal.emit(60)
     return playlists_and_music_folders
