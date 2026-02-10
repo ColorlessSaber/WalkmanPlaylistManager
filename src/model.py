@@ -26,6 +26,7 @@ class Model(qtc.QObject):
         with open(playlist_path, "r") as file:
             clean_list_of_songs = [line_item.strip() for line_item in file.readlines()
                                    if not playlist_markers.match(line_item)]
+        # TODO separate artist, album, and song per entry in clean_list_of_songs.
         self.signal_analysis_of_playlist.emit(clean_list_of_songs)
 
 # *** Methods that use threads to complete a task ***

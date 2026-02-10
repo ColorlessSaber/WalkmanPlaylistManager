@@ -97,7 +97,7 @@ class View(qtw.QWidget):
         self.table_songs_in_playlist_view.setSortingEnabled(False)
         self.table_songs_in_playlist_model = PlaylistTable(
             read_only_columns=[0],
-            column_names=['Song'],
+            column_names=['Artist', 'Album', 'Song'],
         )
         self.table_songs_in_playlist_view.setModel(self.table_songs_in_playlist_model)
         self.table_songs_in_playlist_view.setEnabled(False)
@@ -283,13 +283,11 @@ class View(qtw.QWidget):
 
         :param songs_list: The songs list to be updated.
         """
-        print("songs_list:", songs_list)
         self.table_songs_in_playlist_model.insert_rows(
             position=self.table_songs_in_playlist_model.rowCount(),
             rows=len(songs_list),
             data=songs_list
         )
-        print(self.table_songs_in_playlist_model.extract_data())
 
     @qtc.Slot(int)
     def update_progress_bar(self, progress_value: int) -> None:
