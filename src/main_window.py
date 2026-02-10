@@ -22,9 +22,11 @@ class MainWindow(qtw.QMainWindow):
 
         # view signals that connect to the model slots
         self.view.signal_initiate_scan_of_music_folder.connect(self.model.start_scan_of_music_folder_thread)
+        self.view.signal_initiate_scan_of_playlist.connect(self.model.read_in_playlist)
 
         # model signals that connect to the view slots
         self.model.signal_analysis_of_music_folder.connect(self.view.update_screen_information)
+        self.model.signal_analysis_of_playlist.connect(self.view.update_playlist_table)
         self.model.signal_update_progress.connect(self.view.update_progress_bar)
         self.model.signal_error_message.connect(self.view.messagebox_system_error_detected)
 

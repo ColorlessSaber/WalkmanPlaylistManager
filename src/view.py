@@ -1,3 +1,4 @@
+import os
 from typing import Any
 from PySide6 import (
     QtWidgets as qtw,
@@ -20,6 +21,12 @@ class PlaylistTable(GenericTable):
         """
         return self._data
 
+    def is_table_empty(self) -> bool:
+        """
+        Returns True if the table is empty.
+        """
+        return True if not self._data else False
+
 class MusicFolderTable(GenericTable):
     """Table for showing what folders/song files are in the folder"""
     def insert_rows(self, position, rows, data, parent=qtc.QModelIndex()) -> None:
@@ -32,7 +39,9 @@ class MusicFolderTable(GenericTable):
 class View(qtw.QWidget):
     """The front-end of the program"""
 
+    # Signals that connect to model slots
     signal_initiate_scan_of_music_folder = qtc.Signal(str)
+    signal_initiate_scan_of_playlist = qtc.Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -54,10 +63,12 @@ class View(qtw.QWidget):
             editable=False,
             insertPolicy=qtw.QComboBox.InsertPolicy.InsertAtBottom
         )
-        self.cb_playlist_selection.addItem('New Playlist', 'new_playlist')
+        self.cb_playlist_selection.addItems(['---', 'New Playlist'])
         self.cb_playlist_selection.currentIndexChanged.connect(self.playlist_selection_changed)
+        self.cb_playlist_selection.setEnabled(False)
         lbl_playlist_name = qtw.QLabel("Playlist Name:", self)
         self.le_playlist_name = qtw.QLineEdit(self)
+        self.le_playlist_name.setEnabled(False)
 
         self.playlist_section_group = qtw.QGroupBox("Playlist Selection/Creation", self)
         self.playlist_section_group.setObjectName("playlist_selection_group")
@@ -73,7 +84,6 @@ class View(qtw.QWidget):
                 font-weight: bold;
             }
         """)
-        self.playlist_section_group.setEnabled(False)
 
         # Songs in playlist view section
         lbl_songs_in_playlist = qtw.QLabel("Songs in Playlist", self)
@@ -207,12 +217,33 @@ class View(qtw.QWidget):
     @qtc.Slot()
     def playlist_selection_changed(self, combo_index: int) -> None:
         """
-        Runs when the user selects a different option from the combo-box.
+        Runs when the user selects a different option from the playlist combo-box.
 
         :param combo_index: The index of the combo-box.
         :return:
         """
-        print(f"{combo_index} selected")
+        print("combo-index:", combo_index)
+        if combo_index == 0:
+            self.le_playlist_name.setEnabled(False)
+            self.table_songs_in_playlist_view.setEnabled(False)
+            self.table_music_folder_view.setEnabled(False)
+        elif combo_index >= 1:
+            self.table_songs_in_playlist_view.setEnabled(True)
+            self.table_music_folder_view.setEnabled(True)
+
+            if not self.table_songs_in_playlist_model.is_table_empty():
+                self.table_songs_in_playlist_model.removeRows(
+                    position=0,
+                    rows=self.table_music_folder_model.rowCount()
+                )
+
+            if combo_index == 1:
+                self.le_playlist_name.setEnabled(True)
+                self.le_playlist_name.clear()
+            else:
+                self.le_playlist_name.setEnabled(False)
+                self.le_playlist_name.setText(self.cb_playlist_selection.currentText().replace(".M3U8", ""))
+                self.signal_initiate_scan_of_playlist.emit(os.path.join(self.le_walkman_music_folder.text(), self.cb_playlist_selection.currentText()))
 
     @qtc.Slot(object)
     def update_screen_information(self, music_folder_info):
@@ -225,7 +256,7 @@ class View(qtw.QWidget):
         """
         # clear out old information
         self.cb_playlist_selection.clear()
-        self.cb_playlist_selection.addItem('New Playlist', 'new_playlist')
+        self.cb_playlist_selection.addItems(['---', 'New Playlist'])
 
         self.table_music_folder_model.removeRows(
             position=0,
@@ -244,6 +275,21 @@ class View(qtw.QWidget):
 
         self._enable_widgets(True)
         self.progress_bar.reset()
+
+    @qtc.Slot(list)
+    def update_playlist_table(self, songs_list: list) -> None:
+        """
+        Updates the playlist table with the given songs list.
+
+        :param songs_list: The songs list to be updated.
+        """
+        print("songs_list:", songs_list)
+        self.table_songs_in_playlist_model.insert_rows(
+            position=self.table_songs_in_playlist_model.rowCount(),
+            rows=len(songs_list),
+            data=songs_list
+        )
+        print(self.table_songs_in_playlist_model.extract_data())
 
     @qtc.Slot(int)
     def update_progress_bar(self, progress_value: int) -> None:
@@ -295,9 +341,7 @@ class View(qtw.QWidget):
         """
         self.le_walkman_music_folder.setEnabled(enable)
         self.btn_select_walkman_music_folder.setEnabled(enable)
-        self.playlist_section_group.setEnabled(enable)
-        self.table_songs_in_playlist_view.setEnabled(enable)
-        self.table_music_folder_view.setEnabled(enable)
+        self.cb_playlist_selection.setEnabled(enable)
         self.btn_save_button.setEnabled(enable)
         self.btn_delete_button.setEnabled(enable)
         self.btn_cancel_button.setEnabled(enable)
