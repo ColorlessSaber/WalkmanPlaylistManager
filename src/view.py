@@ -177,7 +177,6 @@ class View(qtw.QWidget):
         """
         print("Canceling changes to playlist")
 
-
     @qtc.Slot()
     def select_walkman_music_folder(self) -> None:
         """
@@ -244,6 +243,7 @@ class View(qtw.QWidget):
         )
 
         self._enable_widgets(True)
+        self.progress_bar.reset()
 
     @qtc.Slot(int)
     def update_progress_bar(self, progress_value: int) -> None:
@@ -280,7 +280,9 @@ class View(qtw.QWidget):
         )
 
         if response == qtw.QMessageBox.StandardButton.Ok:
-            self.reset_progress_bar()
+            self.progress_bar.reset()
+            self.le_walkman_music_folder.setEnabled(True)
+            self.btn_select_walkman_music_folder.setEnabled(True)
 
 # *** Method(s) that are private ***
 

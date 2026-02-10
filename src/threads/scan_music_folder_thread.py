@@ -14,7 +14,9 @@ class ScanMusicFolderThread(qtc.QRunnable):
     @qtc.Slot()
     def run(self) -> None:
         try:
-            music_folder_info = scan_music_folder(self.music_folder_path, walkman_playlist_checker)
+            self.signals.progress.emit(20)
+            music_folder_info = scan_music_folder(self.music_folder_path, walkman_playlist_checker, self.signals.progress)
+            self.signals.progress.emit(100)
         except OSError:
             self.signals.error.emit()
         except BaseException:
