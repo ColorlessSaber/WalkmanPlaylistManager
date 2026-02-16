@@ -4,7 +4,8 @@ from PySide6 import (
     QtWidgets as qtw,
     QtCore as qtc,
 )
-from .pyside_table_object import GenericTable
+from custom_objects import GenericTable, GenericTableView
+from functions import music_file_condition
 
 class PlaylistTable(GenericTable):
     """Table for showing what song(s) are in the playlist"""
@@ -27,6 +28,21 @@ class PlaylistTable(GenericTable):
         """
         return True if not self._data else False
 
+class PlaylistTableView(GenericTableView):
+    """
+    The playlist table view
+    """
+    signal_remove_song = qtc.Signal(int)
+
+    def context_menu(self, pos: qtc.QPoint) -> None:
+        menu = qtw.QMenu()
+        remove_song_action = menu.addAction("Remove Song")
+
+        action = menu.exec_(self.mapToGlobal(pos))
+        if action == remove_song_action:
+            self.signal_remove_song.emit(self.indexAt(pos).row())
+
+
 class MusicFolderTable(GenericTable):
     """Table for showing what folders/song files are in the folder"""
     def insert_rows(self, position, rows, data, parent=qtc.QModelIndex()) -> None:
@@ -35,6 +51,22 @@ class MusicFolderTable(GenericTable):
         for item in data:
             self._data.insert(position, [item]) # the PySide table needs a list of what to fill the row(s), hence the []
         self.endInsertRows()
+
+class MusicFolderTableView(GenericTableView):
+    """
+    The music folder table view
+    """
+    signal_add_song_to_playlist = qtc.Signal(int)
+
+    def context_menu(self, pos: qtc.QPoint) -> None:
+        menu = qtw.QMenu()
+        add_song_action = menu.addAction("Add Song to Playlist")
+
+        action = menu.exec_(self.mapToGlobal(pos))
+        cell_str = self.indexAt(pos).data()
+
+        if action == add_song_action and music_file_condition(cell_str):
+            print(f"add song to playlist {cell_str}")
 
 class View(qtw.QWidget):
     """The front-end of the program"""
@@ -93,7 +125,7 @@ class View(qtw.QWidget):
                 text-decoration: underline;
             }   
         """)
-        self.table_songs_in_playlist_view = qtw.QTableView(self)
+        self.table_songs_in_playlist_view = PlaylistTableView(self)
         self.table_songs_in_playlist_view.setSortingEnabled(False)
         self.table_songs_in_playlist_model = PlaylistTable(
             read_only_columns=[0],
@@ -101,6 +133,7 @@ class View(qtw.QWidget):
         )
         self.table_songs_in_playlist_view.setModel(self.table_songs_in_playlist_model)
         self.table_songs_in_playlist_view.setEnabled(False)
+        self.table_songs_in_playlist_view.signal_remove_song.connect(self.table_songs_in_playlist_model.removeRow)
 
         layout_songs_in_playlist = qtw.QVBoxLayout()
         layout_songs_in_playlist.addWidget(lbl_songs_in_playlist)
@@ -114,7 +147,7 @@ class View(qtw.QWidget):
                 text-decoration: underline;
             }   
         """)
-        self.table_music_folder_view = qtw.QTableView(self)
+        self.table_music_folder_view = MusicFolderTableView(self)
         self.table_music_folder_view.setSortingEnabled(False)
         self.table_music_folder_model = MusicFolderTable(
             read_only_columns=[0],
@@ -304,6 +337,10 @@ class View(qtw.QWidget):
         :return:
         """
         self.progress_bar.reset()
+
+# *** Music folder table commands ***
+
+# *** Playlist table commands ***
 
 # *** Method(s) that launch a messagebox ***
 
