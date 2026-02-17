@@ -172,9 +172,9 @@ class View(qtw.QWidget):
         self.btn_delete_button = qtw.QPushButton("Delete", self)
         self.btn_delete_button.clicked.connect(self.delete_playlist)
         self.btn_delete_button.setEnabled(False)
-        self.btn_cancel_button = qtw.QPushButton("Cancel", self)
-        self.btn_cancel_button.clicked.connect(self.cancel)
-        self.btn_cancel_button.setEnabled(False)
+        self.btn_undo_changes_button = qtw.QPushButton("Undo Changes", self)
+        self.btn_undo_changes_button.clicked.connect(self.undo_changes_to_playlist)
+        self.btn_undo_changes_button.setEnabled(False)
         self.progress_bar = qtw.QProgressBar(self)
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
@@ -182,7 +182,7 @@ class View(qtw.QWidget):
         layout_buttons_and_progress = qtw.QHBoxLayout()
         layout_buttons_and_progress.addWidget(self.btn_save_button)
         layout_buttons_and_progress.addWidget(self.btn_delete_button)
-        layout_buttons_and_progress.addWidget(self.btn_cancel_button)
+        layout_buttons_and_progress.addWidget(self.btn_undo_changes_button)
         layout_buttons_and_progress.addWidget(self.progress_bar)
 
         # Combining all layouts and widgets
@@ -217,13 +217,28 @@ class View(qtw.QWidget):
         print("Deleting Playlist")
 
     @qtc.Slot()
-    def cancel(self):
+    def undo_changes_to_playlist(self):
         """
-        Cancels all changes made to the playlist.
+        Undo all changes to playlist.
 
         :return:
         """
-        print("Canceling changes to playlist")
+        response = qtw.QMessageBox.warning(
+            self,
+            "Undo Changes?",
+            "Are you sure you wish to undo all changes to playlist?",
+            buttons=qtw.QMessageBox.StandardButton.Yes | qtw.QMessageBox.StandardButton.No,
+            defaultButton=qtw.QMessageBox.StandardButton.Yes
+        )
+
+        if response == qtw.QMessageBox.StandardButton.Yes:
+            self.table_songs_in_playlist_model.clear()
+
+            if self.cb_playlist_selection.currentIndex() >= 1:
+                music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
+                self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
+            self.btn_save_button.setEnabled(False)
+            self.btn_undo_changes_button.setEnabled(False)
 
     @qtc.Slot()
     def select_walkman_music_folder(self) -> None:
@@ -239,7 +254,9 @@ class View(qtw.QWidget):
         )
 
         if directory:
-            self._enable_widgets(False)
+            self.le_walkman_music_folder.setEnabled(False)
+            self.btn_select_walkman_music_folder.setEnabled(False)
+
             self.le_walkman_music_folder.setText(directory)
             self.signal_initiate_scan_of_music_folder.emit(directory)
 
@@ -260,7 +277,6 @@ class View(qtw.QWidget):
         :param combo_index: The index of the combo-box.
         :return:
         """
-        print("combo-index:", combo_index)
         if combo_index == 0:
             self.le_playlist_name.setEnabled(False)
             self.table_songs_in_playlist_view.setEnabled(False)
@@ -274,9 +290,11 @@ class View(qtw.QWidget):
 
             if combo_index == 1:
                 self.le_playlist_name.setEnabled(True)
+                self.btn_delete_button.setEnabled(False)
                 self.le_playlist_name.clear()
             else:
                 self.le_playlist_name.setEnabled(False)
+                self.btn_delete_button.setEnabled(True)
                 self.le_playlist_name.setText(self.cb_playlist_selection.currentText().replace(".M3U8", ""))
                 music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
                 self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
@@ -303,7 +321,11 @@ class View(qtw.QWidget):
             [1,3],
         )
 
-        self._enable_widgets(True)
+        self.le_walkman_music_folder.setEnabled(True)
+        self.btn_select_walkman_music_folder.setEnabled(True)
+        self.cb_playlist_selection.setEnabled(True)
+        self.le_playlist_name.setEnabled(True)
+
         self.progress_bar.reset()
 
     @qtc.Slot(int)
@@ -339,6 +361,8 @@ class View(qtw.QWidget):
             row=1,
             data=song
         )
+        self.btn_save_button.setEnabled(True)
+        self.btn_undo_changes_button.setEnabled(True)
 
 # *** Method(s) that affect Playlist table ***
     @qtc.Slot(list)
@@ -374,19 +398,3 @@ class View(qtw.QWidget):
             self.progress_bar.reset()
             self.le_walkman_music_folder.setEnabled(True)
             self.btn_select_walkman_music_folder.setEnabled(True)
-
-# *** Method(s) that are private ***
-
-    def _enable_widgets(self, enable: bool) -> None:
-        """
-        Enables / disables widgets depending on the value of `enable`.
-
-        :param enable: Sets the enable / disable status of widget.
-        :return:
-        """
-        self.le_walkman_music_folder.setEnabled(enable)
-        self.btn_select_walkman_music_folder.setEnabled(enable)
-        self.cb_playlist_selection.setEnabled(enable)
-        self.btn_save_button.setEnabled(enable)
-        self.btn_delete_button.setEnabled(enable)
-        self.btn_cancel_button.setEnabled(enable)
