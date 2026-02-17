@@ -51,7 +51,6 @@ class GenericFileSystemTreeView(qtw.QWidget):
                 self._tree_view.setColumnHidden(column, True)
 
     def context_menu(self, pos) -> None:
-        # pull information of the selected item from the tree and
         # confirm the selection from the model is valid and the model had
         # initialized properly
         selection_model = self._tree_view.selectionModel()
@@ -72,7 +71,7 @@ class GenericFileSystemTreeView(qtw.QWidget):
 
         if self._model.fileInfo(index).isFile():
             action = menu.exec_(self._tree_view.viewport().mapToGlobal(pos))
-            item = self._model.fileInfo(index)
+            item = self._model.fileInfo(index).path()
 
             if action == edit_action:
                 print(f"Editing {item}")

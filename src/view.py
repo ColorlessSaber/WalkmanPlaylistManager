@@ -15,6 +15,12 @@ class PlaylistTable(GenericTable):
             self._data.insert(position, item)
         self.endInsertRows()
 
+    def insert_row(self, position, row, data, parent=qtc.QModelIndex()) -> None:
+        """Insert a single row into the table"""
+        self.beginInsertRows(parent, position, position + row - 1)
+        self._data.insert(position, data)
+        self.endInsertRows()
+
     def extract_data(self) -> list[Any]:
         """
         Returns the data that is stored in the table
@@ -46,12 +52,38 @@ class MusicFolderTreeView(GenericFileSystemTreeView):
     The music folder tree view
     """
 
+    signal_song_to_add = qtc.Signal(str)
+
+    def context_menu(self, pos: qtc.QPoint) -> None:
+        # confirm the selection from the model is valid and the model had
+        # initialized properly
+        selection_model = self._tree_view.selectionModel()
+        if not selection_model or not selection_model.hasSelection():
+            return
+
+        # confirm the index is valid (IE, the user clicked on an item)
+        index = selection_model.currentIndex()
+        if not index.isValid():
+            return
+
+        menu = qtw.QMenu()
+        add_song_to_playlist_action = menu.addAction("Add Song to Playlist")
+
+        if self._model.fileInfo(index).isFile():
+            action = menu.exec_(self.mapToGlobal(pos))
+            song_file = self._model.filePath(index)
+
+            if action == add_song_to_playlist_action:
+                self.signal_song_to_add.emit(song_file)
+
+
 class View(qtw.QWidget):
     """The front-end of the program"""
 
     # Signals that connect to model slots
     signal_initiate_scan_of_music_folder = qtc.Signal(str)
     signal_initiate_scan_of_playlist = qtc.Signal(str)
+    signal_prep_song_for_playlist = qtc.Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -127,6 +159,7 @@ class View(qtw.QWidget):
         """)
         self.music_folder_tree_view = MusicFolderTreeView(self)
         self.music_folder_tree_view.setEnabled(False)
+        self.music_folder_tree_view.signal_song_to_add.connect(self.signal_prep_song_for_playlist)
 
         layout_music_folder = qtw.QVBoxLayout()
         layout_music_folder.addWidget(lbl_music_folder)
@@ -273,20 +306,6 @@ class View(qtw.QWidget):
         self._enable_widgets(True)
         self.progress_bar.reset()
 
-    @qtc.Slot(list)
-    def update_playlist_table(self, songs_list: list) -> None:
-        """
-        Updates the playlist table with the given songs list.
-
-        :param songs_list: The songs list to be updated.
-        """
-        self.table_songs_in_playlist_model.insert_rows(
-            position=self.table_songs_in_playlist_model.rowCount(),
-            rows=len(songs_list),
-            data=songs_list
-        )
-        self.table_songs_in_playlist_view.resizeColumnsToContents()
-
     @qtc.Slot(int)
     def update_progress_bar(self, progress_value: int) -> None:
         """
@@ -306,9 +325,35 @@ class View(qtw.QWidget):
         """
         self.progress_bar.reset()
 
-# *** Music folder table commands ***
+# *** Method(s) that affect Music folder table ***
+    @qtc.Slot(tuple)
+    def add_song_to_playlist(self, song: tuple) -> None:
+        """
+        Adds a song to the playlist.
 
-# *** Playlist table commands ***
+        :param song: The song to be added to the playlist.
+        :return:
+        """
+        self.table_songs_in_playlist_model.insert_row(
+            position=self.table_songs_in_playlist_model.rowCount(),
+            row=1,
+            data=song
+        )
+
+# *** Method(s) that affect Playlist table ***
+    @qtc.Slot(list)
+    def update_playlist_table(self, songs_list: list) -> None:
+        """
+        Updates the playlist table with the given songs list.
+
+        :param songs_list: The songs list to be updated.
+        """
+        self.table_songs_in_playlist_model.insert_rows(
+            position=self.table_songs_in_playlist_model.rowCount(),
+            rows=len(songs_list),
+            data=songs_list
+        )
+        self.table_songs_in_playlist_view.resizeColumnsToContents()
 
 # *** Method(s) that launch a messagebox ***
 

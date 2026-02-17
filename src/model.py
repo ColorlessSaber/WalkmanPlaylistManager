@@ -1,6 +1,9 @@
 from PySide6 import QtCore as qtc
 from .threads import ScanMusicFolderThread
-from .functions import find_songs_in_playlist
+from .functions import (
+    extract_songs_from_playlist,
+    extract_artist_album_and_name_from_song_path
+)
 
 class Model(qtc.QObject):
     """The back-end of the application."""
@@ -12,6 +15,7 @@ class Model(qtc.QObject):
     signal_update_progress = qtc.Signal(int)
     signal_analysis_of_music_folder = qtc.Signal(list)
     signal_analysis_of_playlist = qtc.Signal(list)
+    signal_song_to_add_to_playlist = qtc.Signal(tuple)
 
 # *** Methods that don't use threads to complete a task ***
     @qtc.Slot(str)
@@ -23,8 +27,21 @@ class Model(qtc.QObject):
         :param playlist_path: Path to the playlist.
         :return:
         """
-        songs_in_playlist = find_songs_in_playlist(playlist_path)
+        songs_in_playlist = extract_songs_from_playlist(playlist_path)
         self.signal_analysis_of_playlist.emit(songs_in_playlist)
+
+    @qtc.Slot(str)
+    def prep_song_for_playlist_table(self, song_path: str) -> None:
+        """
+        Prepares the song to be added to the playlist table. IE, extracts the artist, album,
+        and song name from the path to the song.
+
+        :param song_path: Path to the song.
+        :return:
+        """
+        song_info = extract_artist_album_and_name_from_song_path(song_path)
+        self.signal_song_to_add_to_playlist.emit(song_info)
+
 
 # *** Methods that use threads to complete a task ***
     @qtc.Slot(str)
