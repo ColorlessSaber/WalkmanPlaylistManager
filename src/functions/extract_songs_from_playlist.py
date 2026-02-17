@@ -1,6 +1,6 @@
 import re
 
-def find_songs_in_playlist(playlist_directory_path: str) -> tuple:
+def extract_songs_from_playlist(playlist_directory_path: str) -> tuple:
     """
     Opens the playlist; reads the songs in the playlist; and save each song in a list where each entry is
     the song's artist, album, and name.
