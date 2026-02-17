@@ -10,7 +10,7 @@ class Model(qtc.QObject):
     # Signals that connect to view slots
     signal_error_message = qtc.Signal()
     signal_update_progress = qtc.Signal(int)
-    signal_analysis_of_music_folder = qtc.Signal(object)
+    signal_analysis_of_music_folder = qtc.Signal(list)
     signal_analysis_of_playlist = qtc.Signal(list)
 
 # *** Methods that don't use threads to complete a task ***

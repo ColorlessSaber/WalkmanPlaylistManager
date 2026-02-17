@@ -42,32 +42,6 @@ class PlaylistTableView(GenericTableView):
         if action == remove_song_action:
             self.signal_remove_song.emit(self.indexAt(pos).row())
 
-
-class MusicFolderTable(GenericTable):
-    """Table for showing what folders/song files are in the folder"""
-    def insert_rows(self, position, rows, data, parent=qtc.QModelIndex()) -> None:
-        """Insert rows into the table"""
-        self.beginInsertRows(parent, position, position + rows - 1)
-        for item in data:
-            self._data.insert(position, [item]) # the PySide table needs a list of what to fill the row(s), hence the []
-        self.endInsertRows()
-
-class MusicFolderTableView(GenericTableView):
-    """
-    The music folder table view
-    """
-    signal_add_song_to_playlist = qtc.Signal(int)
-
-    def context_menu(self, pos: qtc.QPoint) -> None:
-        menu = qtw.QMenu()
-        add_song_action = menu.addAction("Add Song to Playlist")
-
-        action = menu.exec_(self.mapToGlobal(pos))
-        cell_str = self.indexAt(pos).data()
-
-        if action == add_song_action and music_file_condition(cell_str):
-            print(f"add song to playlist {cell_str}")
-
 class View(qtw.QWidget):
     """The front-end of the program"""
 
@@ -147,18 +121,12 @@ class View(qtw.QWidget):
                 text-decoration: underline;
             }   
         """)
-        self.table_music_folder_view = MusicFolderTableView(self)
-        self.table_music_folder_view.setSortingEnabled(False)
-        self.table_music_folder_model = MusicFolderTable(
-            read_only_columns=[0],
-            column_names=['']
-        )
-        self.table_music_folder_view.setModel(self.table_music_folder_model)
-        self.table_music_folder_view.setEnabled(False)
+        self.music_folder_tree_view = qtw.QTreeView(self)
+        self.music_folder_tree_view.setEnabled(False)
 
         layout_music_folder = qtw.QVBoxLayout()
         layout_music_folder.addWidget(lbl_music_folder)
-        layout_music_folder.addWidget(self.table_music_folder_view)
+        layout_music_folder.addWidget(self.music_folder_tree_view)
 
         # Buttons and progress bar section
         self.btn_save_button = qtw.QPushButton("Save", self)
@@ -259,10 +227,10 @@ class View(qtw.QWidget):
         if combo_index == 0:
             self.le_playlist_name.setEnabled(False)
             self.table_songs_in_playlist_view.setEnabled(False)
-            self.table_music_folder_view.setEnabled(False)
+            self.music_folder_tree_view.setEnabled(False)
         elif combo_index >= 1:
             self.table_songs_in_playlist_view.setEnabled(True)
-            self.table_music_folder_view.setEnabled(True)
+            self.music_folder_tree_view.setEnabled(True)
 
             if not self.table_songs_in_playlist_model.is_table_empty():
                 self.table_songs_in_playlist_model.clear()
@@ -276,31 +244,34 @@ class View(qtw.QWidget):
                 music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
                 self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
 
-    @qtc.Slot(object)
-    def update_screen_information(self, music_folder_info):
+    @qtc.Slot(list)
+    def update_screen_information(self, list_of_playlists):
         """
-        Takes the given music_folder_info, unloads the information stored inside it and
-        update the screen information.
+        Loads in the playlist(s) found in the Walkman MUSIC folder, and generates the folder
+        structure for the music folder tree view.
 
-        :param music_folder_info: An object that holds information about the Walkman MUSIC folder.
+        :param list_of_playlists: A list of playlist(s) found in the Walkman MUSIC folder.
         :return:
         """
         # clear out old information
         self.cb_playlist_selection.clear()
         self.cb_playlist_selection.addItems(['---', 'New Playlist'])
 
-        self.table_music_folder_model.clear()
+        #self.table_music_folder_model.clear()
         self.table_songs_in_playlist_model.clear()
 
         # add in new information
-        for playlist in music_folder_info['playlists']:
-            self.cb_playlist_selection.addItem(playlist)
+        self.cb_playlist_selection.addItems(list_of_playlists)
 
-        self.table_music_folder_model.insert_rows(
-            position=self.table_music_folder_model.rowCount(),
-            rows=len(music_folder_info['music_folders']),
-            data=sorted(music_folder_info['music_folders'], reverse=True) # puts the folders in A-Z, top-to-bottom order
-        )
+        # create tree view of directory
+        model = qtw.QFileSystemModel()
+        model.setRootPath(self.le_walkman_music_folder.text())
+        model.setNameFilters(["*.mp3", "*.wav", "*.m4a", "*.flac"])
+        model.setNameFilterDisables(False) # keeps directories visible
+        self.music_folder_tree_view.setModel(model)
+        self.music_folder_tree_view.setRootIndex(model.index(self.le_walkman_music_folder.text()))
+        self.music_folder_tree_view.setColumnHidden(1, True) # hiding file size information
+        self.music_folder_tree_view.setColumnHidden(3, True) # hiding 'date modifying'
 
         self._enable_widgets(True)
         self.progress_bar.reset()

@@ -1,10 +1,10 @@
 from PySide6 import QtCore as qtc
 from ..classes import DefaultThreadSignals
-from ..functions import scan_music_folder, walkman_playlist_checker
+from ..functions import scan_for_playlists, walkman_playlist_checker
 
 class ScanMusicFolderThread(qtc.QRunnable):
     class ThreadSignals(DefaultThreadSignals):
-        finished = qtc.Signal(object)
+        finished = qtc.Signal(list)
 
     def __init__(self, music_folder_path):
         super().__init__()
@@ -15,7 +15,7 @@ class ScanMusicFolderThread(qtc.QRunnable):
     def run(self) -> None:
         try:
             self.signals.progress.emit(20)
-            music_folder_info = scan_music_folder(self.music_folder_path, walkman_playlist_checker, self.signals.progress)
+            music_folder_info = scan_for_playlists(self.music_folder_path, walkman_playlist_checker, self.signals.progress)
             self.signals.progress.emit(100)
         except OSError:
             self.signals.error.emit()

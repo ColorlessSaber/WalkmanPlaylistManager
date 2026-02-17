@@ -2,27 +2,22 @@ import pathlib
 from typing import Callable
 from PySide6 import QtCore as qtc
 
-def scan_music_folder(
+def scan_for_playlists(
         music_folder_dir_path: str,
         playlist_file_condition: Callable[..., bool],
-        progress_signal: qtc.Signal) -> dict:
+        progress_signal: qtc.Signal) -> list:
     """
-    Takes the given music_folder_dir_path and returns the folders and playlists found in it.
+    Takes the given directory path, find playlists in the folder, and return them in a list.
 
     :param music_folder_dir_path: Path to the music folder directory.
     :param playlist_file_condition: Function to check if the file is a valid playlist.
     :param progress_signal: Signal to report the progress status.
-    :return: Dictionary of folders and playlists.
+    :return: list of playlist(s)
     """
-    playlists_and_music_folders = {
-        'playlists': [],
-        'music_folders': [],
-    }
     progress_signal.emit(40)
-    for entry in pathlib.Path(music_folder_dir_path).iterdir():
-        if entry.is_file() and playlist_file_condition(entry.name):
-            playlists_and_music_folders['playlists'].append(entry.name)
-        elif entry.is_dir():
-            playlists_and_music_folders['music_folders'].append(entry.name)
+
+    playlists_found = [entry.name for entry in pathlib.Path(music_folder_dir_path).iterdir() if entry.is_file() and playlist_file_condition(entry.name)]
+
     progress_signal.emit(60)
-    return playlists_and_music_folders
+
+    return playlists_found
