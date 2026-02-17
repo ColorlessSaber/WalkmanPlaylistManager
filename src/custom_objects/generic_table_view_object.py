@@ -5,7 +5,7 @@ from PySide6 import (
 
 class GenericTableView(qtw.QTableView):
     """
-    Generic PySide Table View with default context menu request.
+    Generic PySide Table View with default context menu.
     """
 
     def __init__(self, parent=None):
@@ -15,9 +15,6 @@ class GenericTableView(qtw.QTableView):
         self.customContextMenuRequested.connect(self.context_menu)
 
     def context_menu(self, pos: qtc.QPoint) -> None:
-        """
-        Returns the context menu item for the given position.
-        """
         # Create menu with actions
         menu = qtw.QMenu()
         edit_action = menu.addAction("Edit Cell")
