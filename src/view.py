@@ -4,8 +4,7 @@ from PySide6 import (
     QtWidgets as qtw,
     QtCore as qtc,
 )
-from custom_objects import GenericTable, GenericTableView
-from functions import music_file_condition
+from custom_objects import GenericTable, GenericTableView, GenericFileSystemTreeView
 
 class PlaylistTable(GenericTable):
     """Table for showing what song(s) are in the playlist"""
@@ -41,6 +40,11 @@ class PlaylistTableView(GenericTableView):
         action = menu.exec_(self.mapToGlobal(pos))
         if action == remove_song_action:
             self.signal_remove_song.emit(self.indexAt(pos).row())
+
+class MusicFolderTreeView(GenericFileSystemTreeView):
+    """
+    The music folder tree view
+    """
 
 class View(qtw.QWidget):
     """The front-end of the program"""
@@ -121,7 +125,7 @@ class View(qtw.QWidget):
                 text-decoration: underline;
             }   
         """)
-        self.music_folder_tree_view = qtw.QTreeView(self)
+        self.music_folder_tree_view = MusicFolderTreeView(self)
         self.music_folder_tree_view.setEnabled(False)
 
         layout_music_folder = qtw.QVBoxLayout()
@@ -256,22 +260,15 @@ class View(qtw.QWidget):
         # clear out old information
         self.cb_playlist_selection.clear()
         self.cb_playlist_selection.addItems(['---', 'New Playlist'])
-
-        #self.table_music_folder_model.clear()
         self.table_songs_in_playlist_model.clear()
 
         # add in new information
         self.cb_playlist_selection.addItems(list_of_playlists)
-
-        # create tree view of directory
-        model = qtw.QFileSystemModel()
-        model.setRootPath(self.le_walkman_music_folder.text())
-        model.setNameFilters(["*.mp3", "*.wav", "*.m4a", "*.flac"])
-        model.setNameFilterDisables(False) # keeps directories visible
-        self.music_folder_tree_view.setModel(model)
-        self.music_folder_tree_view.setRootIndex(model.index(self.le_walkman_music_folder.text()))
-        self.music_folder_tree_view.setColumnHidden(1, True) # hiding file size information
-        self.music_folder_tree_view.setColumnHidden(3, True) # hiding 'date modifying'
+        self.music_folder_tree_view.set_root_path(
+            self.le_walkman_music_folder.text(),
+            ["*.mp3", "*.wav", "*.m4a", "*.flac"],
+            [1,3],
+        )
 
         self._enable_widgets(True)
         self.progress_bar.reset()
