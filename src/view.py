@@ -143,7 +143,7 @@ class View(qtw.QWidget):
         )
         self.table_songs_in_playlist_view.setModel(self.table_songs_in_playlist_model)
         self.table_songs_in_playlist_view.setEnabled(False)
-        self.table_songs_in_playlist_view.signal_remove_song.connect(self.table_songs_in_playlist_model.removeRow)
+        self.table_songs_in_playlist_view.signal_remove_song.connect(self.song_to_remove_from_playlist)
 
         layout_songs_in_playlist = qtw.QVBoxLayout()
         layout_songs_in_playlist.addWidget(lbl_songs_in_playlist)
@@ -361,6 +361,18 @@ class View(qtw.QWidget):
             row=1,
             data=song
         )
+        self.btn_save_button.setEnabled(True)
+        self.btn_undo_changes_button.setEnabled(True)
+
+    @qtc.Slot(int)
+    def song_to_remove_from_playlist(self, song_index: int) -> None:
+        """
+        Removes a song from the playlist.
+
+        :param song_index: The index of the song to be removed from the playlist.
+        :return:
+        """
+        self.table_songs_in_playlist_model.removeRow(row=song_index)
         self.btn_save_button.setEnabled(True)
         self.btn_undo_changes_button.setEnabled(True)
 
