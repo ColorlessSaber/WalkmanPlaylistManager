@@ -23,16 +23,17 @@ class Model(qtc.QObject):
 
 # *** Methods that don't use threads to complete a task ***
     @qtc.Slot(str)
-    def read_in_playlist(self, playlist_path: str) -> None:
+    def read_in_playlist(self, playlist_name: str, playlist_path: str) -> None:
         """
         Opens the playlist; reads the songs in the playlist; and save each song in a list where each entry is
         the song's artist, album, and name.
 
+        :param playlist_name: Name of the playlist.
         :param playlist_path: Path to the playlist.
         :return:
         """
-        # TODO add in try-except with error messaging or turn into a thread
-        songs_in_playlist = extract_songs_from_playlist(playlist_path)
+        # TODO turn into a thread to have try-except logic
+        songs_in_playlist = extract_songs_from_playlist(playlist_name, playlist_path)
         self.signal_analysis_of_playlist.emit(songs_in_playlist)
 
     @qtc.Slot(str)

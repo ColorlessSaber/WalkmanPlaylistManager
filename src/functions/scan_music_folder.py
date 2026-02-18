@@ -16,7 +16,7 @@ def scan_for_playlists(
     """
     progress_signal.emit(40)
 
-    playlists_found = [entry.name for entry in pathlib.Path(music_folder_dir_path).iterdir() if entry.is_file() and playlist_file_condition(entry.name)]
+    playlists_found = [entry.name.strip('.M3U8') for entry in pathlib.Path(music_folder_dir_path).iterdir() if entry.is_file() and playlist_file_condition(entry.name)]
 
     progress_signal.emit(60)
 

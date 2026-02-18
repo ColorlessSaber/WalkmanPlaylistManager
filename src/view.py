@@ -1,10 +1,14 @@
-import pathlib
 from typing import Any
 from PySide6 import (
     QtWidgets as qtw,
     QtCore as qtc,
 )
-from custom_objects import GenericTable, GenericTableView, GenericFileSystemTreeView
+from custom_objects import (
+    GenericTable,
+    GenericTableView,
+    GenericFileSystemTreeView,
+    ModifiedQComboBox,
+)
 
 class PlaylistTable(GenericTable):
     """Table for showing what song(s) are in the playlist"""
@@ -82,7 +86,7 @@ class View(qtw.QWidget):
 
     # Signals that connect to model slots
     signal_initiate_scan_of_music_folder = qtc.Signal(str)
-    signal_initiate_scan_of_playlist = qtc.Signal(str)
+    signal_initiate_scan_of_playlist = qtc.Signal(str, str)
     signal_prep_song_for_playlist = qtc.Signal(str)
     signal_save_playlist = qtc.Signal(tuple)
 
@@ -101,7 +105,7 @@ class View(qtw.QWidget):
         layout_walkman_music_folder.addWidget(self.btn_select_walkman_music_folder)
 
         # Playlist selection/creation section
-        self.cb_playlist_selection = qtw.QComboBox(
+        self.cb_playlist_selection = ModifiedQComboBox(
             self,
             editable=False,
             insertPolicy=qtw.QComboBox.InsertPolicy.InsertAtBottom
@@ -260,8 +264,7 @@ class View(qtw.QWidget):
             self.btn_undo_changes_button.setEnabled(False)
 
             if self.cb_playlist_selection.currentIndex() > 1:
-                music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
-                self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
+                self.signal_initiate_scan_of_playlist.emit(self.cb_playlist_selection.currentText(), self.le_walkman_music_folder.text())
 
     @qtc.Slot()
     def select_walkman_music_folder(self) -> None:
@@ -318,9 +321,8 @@ class View(qtw.QWidget):
             else:
                 self.le_playlist_name.setEnabled(False)
                 self.btn_delete_button.setEnabled(True)
-                self.le_playlist_name.setText(self.cb_playlist_selection.currentText().replace(".M3U8", ""))
-                music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
-                self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
+                self.le_playlist_name.setText(self.cb_playlist_selection.currentText())
+                self.signal_initiate_scan_of_playlist.emit(self.cb_playlist_selection.currentText(), self.le_walkman_music_folder.text())
 
     @qtc.Slot(list)
     def update_screen_information(self, list_of_playlists):
@@ -431,12 +433,17 @@ class View(qtw.QWidget):
 
         if response == qtw.QMessageBox.StandardButton.Ok:
             self.progress_bar.reset()
+            self.table_songs_in_playlist_model.clear()
+            self.le_walkman_music_folder.setEnabled(True)
+            self.btn_select_walkman_music_folder.setEnabled(True)
+            self.cb_playlist_selection.setEnabled(True)
 
-            # Re-scanning the music folder so it will reset the interface to 'default' state,
-            # and places the new playlist--if the user created a new one--in alphabetical order
-            # with any other existing playlist(s)
+            # Append playlist to the list of existing playlists if it does not exist in it
+            if self.le_playlist_name.text() not in self.cb_playlist_selection.all_items():
+                self.cb_playlist_selection.addItem(self.le_playlist_name.text())
+
             self.le_playlist_name.clear()
-            self.signal_initiate_scan_of_music_folder.emit(self.le_walkman_music_folder.text())
+            self.cb_playlist_selection.setCurrentIndex(0)
 
 
     @qtc.Slot()
