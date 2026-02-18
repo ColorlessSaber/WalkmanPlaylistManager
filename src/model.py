@@ -11,7 +11,7 @@ from .functions import (
 class Model(qtc.QObject):
     """The back-end of the application."""
 
-    thread_pool = qtc.QThreadPool()
+    thread_pool = qtc.QThreadPool().globalInstance()
 
     # Signals that connect to view slots
     signal_error_message = qtc.Signal()
