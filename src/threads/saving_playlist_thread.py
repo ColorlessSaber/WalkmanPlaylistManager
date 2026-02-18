@@ -1,4 +1,3 @@
-import pathlib
 from PySide6 import QtCore as qtc
 from ..classes import DefaultThreadSignals
 from ..functions import generate_playlist

@@ -3,7 +3,7 @@ __init__ file for threads folder
 """
 __all__ = [
     'ScanMusicFolderThread',
-    'saving_playlist_thread'
+    'SavingPlaylistThread'
 ]
 
 from .scan_music_folder_thread import ScanMusicFolderThread
