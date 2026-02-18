@@ -1,5 +1,8 @@
 from PySide6 import QtCore as qtc
-from .threads import ScanMusicFolderThread
+from .threads import (
+    ScanMusicFolderThread,
+    SavingPlaylistThread
+)
 from .functions import (
     extract_songs_from_playlist,
     extract_artist_album_and_name_from_song_path
@@ -16,6 +19,7 @@ class Model(qtc.QObject):
     signal_analysis_of_music_folder = qtc.Signal(list)
     signal_analysis_of_playlist = qtc.Signal(list)
     signal_song_to_add_to_playlist = qtc.Signal(tuple)
+    signal_playlist_successfully_saved = qtc.Signal()
 
 # *** Methods that don't use threads to complete a task ***
     @qtc.Slot(str)
@@ -27,6 +31,7 @@ class Model(qtc.QObject):
         :param playlist_path: Path to the playlist.
         :return:
         """
+        # TODO add in try-except with error messaging or turn into a thread
         songs_in_playlist = extract_songs_from_playlist(playlist_path)
         self.signal_analysis_of_playlist.emit(songs_in_playlist)
 
@@ -42,7 +47,6 @@ class Model(qtc.QObject):
         song_info = extract_artist_album_and_name_from_song_path(song_path)
         self.signal_song_to_add_to_playlist.emit(song_info)
 
-
 # *** Methods that use threads to complete a task ***
     @qtc.Slot(str)
     def start_scan_of_music_folder_thread(self, directory: str) -> None:
@@ -57,3 +61,17 @@ class Model(qtc.QObject):
         scan_music_folder_thread.signals.error.connect(self.signal_error_message.emit)
         scan_music_folder_thread.signals.finished.connect(self.signal_analysis_of_music_folder.emit)
         self.thread_pool.start(scan_music_folder_thread)
+
+    @qtc.Slot(tuple)
+    def start_saving_playlist(self, playlist_info: tuple) -> None:
+        """
+        Starts the thread for saving a new/existing playlist.
+
+        :param playlist_info: A tuple containing the: songs that will go in playlist, playlist name,
+        and directory to save the playlist in.
+        """
+        save_playlist_thread = SavingPlaylistThread(*playlist_info)
+        save_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
+        save_playlist_thread.signals.error.connect(self.signal_error_message.emit)
+        save_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_saved.emit)
+        self.thread_pool.start(save_playlist_thread)

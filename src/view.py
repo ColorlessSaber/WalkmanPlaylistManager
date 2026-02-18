@@ -84,6 +84,7 @@ class View(qtw.QWidget):
     signal_initiate_scan_of_music_folder = qtc.Signal(str)
     signal_initiate_scan_of_playlist = qtc.Signal(str)
     signal_prep_song_for_playlist = qtc.Signal(str)
+    signal_save_playlist = qtc.Signal(tuple)
 
     def __init__(self):
         super().__init__()
@@ -205,7 +206,29 @@ class View(qtw.QWidget):
 
         :return:
         """
-        print("Saving Playlist")
+        if self.le_playlist_name.text() != "":
+            self.le_walkman_music_folder.setEnabled(False)
+            self.btn_select_walkman_music_folder.setEnabled(False)
+            self.cb_playlist_selection.setEnabled(False)
+            self.le_playlist_name.setEnabled(False)
+            self.table_songs_in_playlist_view.setEnabled(False)
+            self.music_folder_tree_view.setEnabled(False)
+            self.btn_save_button.setEnabled(False)
+            self.btn_delete_button.setEnabled(False)
+            self.btn_undo_changes_button.setEnabled(False)
+
+            self.signal_save_playlist.emit((
+                self.table_songs_in_playlist_model.extract_data(),
+                self.le_playlist_name.text(),
+                self.le_walkman_music_folder.text(),
+            ))
+
+        else:
+            qtw.QMessageBox.information(
+                self,
+                'Name for Paylist',
+                'Please provide a name for the paylist to save the playlist.',
+            )
 
     @qtc.Slot()
     def delete_playlist(self):
@@ -233,12 +256,12 @@ class View(qtw.QWidget):
 
         if response == qtw.QMessageBox.StandardButton.Yes:
             self.table_songs_in_playlist_model.clear()
-
-            if self.cb_playlist_selection.currentIndex() >= 1:
-                music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
-                self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
             self.btn_save_button.setEnabled(False)
             self.btn_undo_changes_button.setEnabled(False)
+
+            if self.cb_playlist_selection.currentIndex() > 1:
+                music_folder_path = pathlib.Path(self.le_walkman_music_folder.text()).joinpath(self.cb_playlist_selection.currentText())
+                self.signal_initiate_scan_of_playlist.emit(str(music_folder_path))
 
     @qtc.Slot()
     def select_walkman_music_folder(self) -> None:
@@ -394,6 +417,29 @@ class View(qtw.QWidget):
 # *** Method(s) that launch a messagebox ***
 
     @qtc.Slot()
+    def messagebox_playlist_saved(self) -> None:
+        """
+        Launches messagebox informing the user the playlist was saved.
+
+        :return:
+        """
+        response = qtw.QMessageBox.information(
+            self,
+            'Playlist Saved!',
+            'The playlist was saved successfully!'
+        )
+
+        if response == qtw.QMessageBox.StandardButton.Ok:
+            self.progress_bar.reset()
+
+            # Re-scanning the music folder so it will reset the interface to 'default' state,
+            # and places the new playlist--if the user created a new one--in alphabetical order
+            # with any other existing playlist(s)
+            self.le_playlist_name.clear()
+            self.signal_initiate_scan_of_music_folder.emit(self.le_walkman_music_folder.text())
+
+
+    @qtc.Slot()
     def messagebox_system_error_detected(self) -> None:
         """
         Launches the messagebox to inform the user a system error had occurred.
@@ -405,7 +451,7 @@ class View(qtw.QWidget):
             'System Error',
             'The program ran into an error while working a process.'
         )
-
+        #TODO add in logic or something to know of the state of the interface when error occurred to enable correct widgets
         if response == qtw.QMessageBox.StandardButton.Ok:
             self.progress_bar.reset()
             self.le_walkman_music_folder.setEnabled(True)
