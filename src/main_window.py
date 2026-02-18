@@ -22,7 +22,7 @@ class MainWindow(qtw.QMainWindow):
 
         # view signals that connect to the model slots
         self.view.signal_initiate_scan_of_music_folder.connect(self.model.start_scan_of_music_folder_thread)
-        self.view.signal_initiate_scan_of_playlist.connect(self.model.read_in_playlist)
+        self.view.signal_initiate_scan_of_playlist.connect(self.model.start_extract_of_songs_from_playlist_thread)
         self.view.signal_prep_song_for_playlist.connect(self.model.prep_song_for_playlist_table)
         self.view.signal_save_playlist.connect(self.model.start_saving_playlist)
 

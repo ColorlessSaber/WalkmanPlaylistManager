@@ -402,13 +402,14 @@ class View(qtw.QWidget):
         self.btn_undo_changes_button.setEnabled(True)
 
 # *** Method(s) that affect Playlist table ***
-    @qtc.Slot(list)
-    def update_playlist_table(self, songs_list: list) -> None:
+    @qtc.Slot(tuple)
+    def update_playlist_table(self, songs_list: tuple) -> None:
         """
         Updates the playlist table with the given songs list.
 
         :param songs_list: The songs list to be updated.
         """
+        self.progress_bar.reset()
         self.table_songs_in_playlist_model.insert_rows(
             position=self.table_songs_in_playlist_model.rowCount(),
             rows=len(songs_list),

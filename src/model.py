@@ -1,10 +1,10 @@
 from PySide6 import QtCore as qtc
 from .threads import (
     ScanMusicFolderThread,
-    SavingPlaylistThread
+    SavingPlaylistThread,
+    ExtractSongsFromPlaylistThread
 )
 from .functions import (
-    extract_songs_from_playlist,
     extract_artist_album_and_name_from_song_path
 )
 
@@ -17,25 +17,11 @@ class Model(qtc.QObject):
     signal_error_message = qtc.Signal()
     signal_update_progress = qtc.Signal(int)
     signal_analysis_of_music_folder = qtc.Signal(list)
-    signal_analysis_of_playlist = qtc.Signal(list)
+    signal_analysis_of_playlist = qtc.Signal(tuple)
     signal_song_to_add_to_playlist = qtc.Signal(tuple)
     signal_playlist_successfully_saved = qtc.Signal()
 
 # *** Methods that don't use threads to complete a task ***
-    @qtc.Slot(str)
-    def read_in_playlist(self, playlist_name: str, playlist_path: str) -> None:
-        """
-        Opens the playlist; reads the songs in the playlist; and save each song in a list where each entry is
-        the song's artist, album, and name.
-
-        :param playlist_name: Name of the playlist.
-        :param playlist_path: Path to the playlist.
-        :return:
-        """
-        # TODO turn into a thread to have try-except logic
-        songs_in_playlist = extract_songs_from_playlist(playlist_name, playlist_path)
-        self.signal_analysis_of_playlist.emit(songs_in_playlist)
-
     @qtc.Slot(str)
     def prep_song_for_playlist_table(self, song_path: str) -> None:
         """
@@ -63,6 +49,22 @@ class Model(qtc.QObject):
         scan_music_folder_thread.signals.finished.connect(self.signal_analysis_of_music_folder.emit)
         self.thread_pool.start(scan_music_folder_thread)
 
+    @qtc.Slot(str)
+    def start_extract_of_songs_from_playlist_thread(self, playlist_name: str, playlist_path: str) -> None:
+        """
+        Starts the thread for extracting songs from selected playlist.
+
+        :param playlist_name: Name of the playlist.
+        :param playlist_path: Path to the playlist.
+        :return:
+        """
+        extract_songs_from_playlist_thread = ExtractSongsFromPlaylistThread(playlist_name, playlist_path)
+        extract_songs_from_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
+        extract_songs_from_playlist_thread.signals.error.connect(self.signal_error_message.emit)
+        extract_songs_from_playlist_thread.signals.finished.connect(self.signal_analysis_of_playlist.emit)
+        self.thread_pool.start(extract_songs_from_playlist_thread)
+
+
     @qtc.Slot(tuple)
     def start_saving_playlist(self, playlist_info: tuple) -> None:
         """
@@ -70,6 +72,7 @@ class Model(qtc.QObject):
 
         :param playlist_info: A tuple containing the: songs that will go in playlist, playlist name,
         and directory to save the playlist in.
+        :return:
         """
         save_playlist_thread = SavingPlaylistThread(*playlist_info)
         save_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
