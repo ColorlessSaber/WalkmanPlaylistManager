@@ -1,3 +1,5 @@
+import pathlib
+
 from PySide6 import QtCore as qtc
 from .threads import (
     ScanMusicFolderThread,
@@ -20,6 +22,7 @@ class Model(qtc.QObject):
     signal_analysis_of_playlist = qtc.Signal(tuple)
     signal_song_to_add_to_playlist = qtc.Signal(tuple)
     signal_playlist_successfully_saved = qtc.Signal()
+    signal_playlist_successfully_deleted = qtc.Signal()
 
 # *** Methods that don't use threads to complete a task ***
     @qtc.Slot(str)
@@ -33,6 +36,23 @@ class Model(qtc.QObject):
         """
         song_info = extract_artist_album_and_name_from_song_path(song_path)
         self.signal_song_to_add_to_playlist.emit(song_info)
+
+    @qtc.Slot(tuple)
+    def delete_selected_playlist(self, playlist_info: tuple) -> None:
+        """
+        Deletes the selected playlist.
+
+        :param playlist_info: A tuple containing the name of the playlist and where its directory location.
+        :return:
+        """
+        try:
+            playlist_name, directory = playlist_info
+            file_path = pathlib.Path(directory).joinpath(playlist_name + '.M3U8')
+            file_path.unlink()
+        except FileNotFoundError:
+            self.signal_error_message.emit()
+        else:
+            self.signal_playlist_successfully_deleted.emit()
 
 # *** Methods that use threads to complete a task ***
     @qtc.Slot(str)
@@ -63,7 +83,6 @@ class Model(qtc.QObject):
         extract_songs_from_playlist_thread.signals.error.connect(self.signal_error_message.emit)
         extract_songs_from_playlist_thread.signals.finished.connect(self.signal_analysis_of_playlist.emit)
         self.thread_pool.start(extract_songs_from_playlist_thread)
-
 
     @qtc.Slot(tuple)
     def start_saving_playlist(self, playlist_info: tuple) -> None:

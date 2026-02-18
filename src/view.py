@@ -89,6 +89,7 @@ class View(qtw.QWidget):
     signal_initiate_scan_of_playlist = qtc.Signal(str, str)
     signal_prep_song_for_playlist = qtc.Signal(str)
     signal_save_playlist = qtc.Signal(tuple)
+    signal_delete_playlist = qtc.Signal(tuple)
 
     def __init__(self):
         super().__init__()
@@ -241,7 +242,22 @@ class View(qtw.QWidget):
 
         :return:
         """
-        print("Deleting Playlist")
+        response = qtw.QMessageBox.question(
+            self,
+            "Delete Playlist?",
+            "Are you sure you want to delete the playlist?",
+            buttons=qtw.QMessageBox.StandardButton.Yes | qtw.QMessageBox.StandardButton.No,
+            defaultButton=qtw.QMessageBox.StandardButton.Yes
+        )
+
+        if response == qtw.QMessageBox.StandardButton.Yes:
+            self.btn_save_button.setEnabled(False)
+            self.btn_delete_button.setEnabled(False)
+            self.btn_undo_changes_button.setEnabled(False)
+            self.table_songs_in_playlist_view.setEnabled(False)
+            self.music_folder_tree_view.setEnabled(False)
+
+            self.signal_delete_playlist.emit((self.le_playlist_name.text(), self.le_walkman_music_folder.text()))
 
     @qtc.Slot()
     def undo_changes_to_playlist(self):
@@ -410,6 +426,19 @@ class View(qtw.QWidget):
 # *** Method(s) that launch a messagebox ***
 
     @qtc.Slot()
+    def messagebox_playlist_deleted(self) -> None:
+        response = qtw.QMessageBox.information(
+            self,
+            'Playlist Deleted',
+            'The playlist was deleted successfully!'
+        )
+
+        if response == qtw.QMessageBox.StandardButton.Ok:
+            self.table_songs_in_playlist_model.clear()
+            self.cb_playlist_selection.remove_item(self.le_playlist_name.text())
+            self.le_playlist_name.clear()
+
+    @qtc.Slot()
     def messagebox_playlist_saved(self) -> None:
         """
         Launches messagebox informing the user the playlist was saved.
@@ -435,7 +464,6 @@ class View(qtw.QWidget):
 
             self.le_playlist_name.clear()
             self.cb_playlist_selection.setCurrentIndex(0)
-
 
     @qtc.Slot()
     def messagebox_system_error_detected(self) -> None:
