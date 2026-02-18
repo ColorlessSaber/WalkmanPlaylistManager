@@ -363,16 +363,7 @@ class View(qtw.QWidget):
         """
         self.progress_bar.setValue(progress_value)
 
-    @qtc.Slot()
-    def reset_progress_bar(self) -> None:
-        """
-        Resets the screen progress bar.
-
-        :return:
-        """
-        self.progress_bar.reset()
-
-# *** Method(s) that affect Music folder table ***
+# *** Method(s) that affect Playlist table ***
     @qtc.Slot(tuple)
     def add_song_to_playlist(self, song: tuple) -> None:
         """
@@ -401,7 +392,6 @@ class View(qtw.QWidget):
         self.btn_save_button.setEnabled(True)
         self.btn_undo_changes_button.setEnabled(True)
 
-# *** Method(s) that affect Playlist table ***
     @qtc.Slot(tuple)
     def update_playlist_table(self, songs_list: tuple) -> None:
         """
