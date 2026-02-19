@@ -78,10 +78,10 @@ class GenericTable(qtc.QAbstractTableModel):
             del(self._data[position])
         self.endRemoveRows()
 
-    def removeRow(self, row, parent=qtc.QModelIndex()) -> None:
+    def removeRow(self, position, row=1, parent=qtc.QModelIndex()) -> None:
         """Remove a single row from the table"""
-        self.beginRemoveRows(parent, row, row - 1)
-        del(self._data[row])
+        self.beginRemoveRows(parent, position, position + row - 1)
+        del(self._data[position])
         self.endRemoveRows()
 
     def clear(self) -> None:
