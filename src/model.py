@@ -10,13 +10,15 @@ from .functions import (
     extract_artist_album_and_name_from_song_path
 )
 
+from .classes import ErrorEnum
+
 class Model(qtc.QObject):
     """The back-end of the application."""
 
     thread_pool = qtc.QThreadPool().globalInstance()
 
     # Signals that connect to view slots
-    signal_error_message = qtc.Signal()
+    signal_error_message = qtc.Signal(object)
     signal_update_progress = qtc.Signal(int)
     signal_analysis_of_music_folder = qtc.Signal(list)
     signal_analysis_of_playlist = qtc.Signal(tuple)
@@ -34,7 +36,7 @@ class Model(qtc.QObject):
         :param song_path: Path to the song.
         :return:
         """
-        song_info = extract_artist_album_and_name_from_song_path(song_path)
+        song_info = extract_artist_album_and_name_from_song_path(song_path) # TODO move this to the MusicFolderView method
         self.signal_song_to_add_to_playlist.emit(song_info)
 
     @qtc.Slot(tuple)
@@ -45,12 +47,12 @@ class Model(qtc.QObject):
         :param playlist_info: A tuple containing the name of the playlist and where its directory location.
         :return:
         """
-        try:
+        try: # TODO make this a thread
             playlist_name, directory = playlist_info
             file_path = pathlib.Path(directory).joinpath(playlist_name + '.M3U8')
             file_path.unlink()
         except FileNotFoundError:
-            self.signal_error_message.emit()
+            self.signal_error_message.emit(ErrorEnum.DELETE_PLAYLIST_ERROR)
         else:
             self.signal_playlist_successfully_deleted.emit()
 
@@ -85,7 +87,7 @@ class Model(qtc.QObject):
         self.thread_pool.start(extract_songs_from_playlist_thread)
 
     @qtc.Slot(tuple)
-    def start_saving_playlist(self, playlist_info: tuple) -> None:
+    def start_saving_playlist_thread(self, playlist_info: tuple) -> None:
         """
         Starts the thread for saving a new/existing playlist.
 

@@ -9,6 +9,7 @@ from custom_objects import (
     GenericFileSystemTreeView,
     ModifiedQComboBox,
 )
+from classes import ErrorEnum
 
 class PlaylistTable(GenericTable):
     """Table for showing what song(s) are in the playlist"""
@@ -93,6 +94,8 @@ class View(qtw.QWidget):
 
     def __init__(self):
         super().__init__()
+
+        self.playlist_has_been_modified = False # Keeps track when the playlist have been modified--add/remove song(s)
 
         # Walkman MUSIC folder selection section
         lbl_walkman_music_folder = qtw.QLabel("Walkman Music Folder:", self)
@@ -212,15 +215,7 @@ class View(qtw.QWidget):
         :return:
         """
         if self.le_playlist_name.text() != "":
-            self.le_walkman_music_folder.setEnabled(False)
-            self.btn_select_walkman_music_folder.setEnabled(False)
-            self.cb_playlist_selection.setEnabled(False)
-            self.le_playlist_name.setEnabled(False)
-            self.table_songs_in_playlist_view.setEnabled(False)
-            self.music_folder_tree_view.setEnabled(False)
-            self.btn_save_button.setEnabled(False)
-            self.btn_delete_button.setEnabled(False)
-            self.btn_undo_changes_button.setEnabled(False)
+            self._disable_all_widgets()
 
             self.signal_save_playlist.emit((
                 self.table_songs_in_playlist_model.extract_data(),
@@ -231,7 +226,7 @@ class View(qtw.QWidget):
         else:
             qtw.QMessageBox.information(
                 self,
-                'Name for Paylist',
+                'Name for Playlist',
                 'Please provide a name for the paylist to save the playlist.',
             )
 
@@ -251,11 +246,7 @@ class View(qtw.QWidget):
         )
 
         if response == qtw.QMessageBox.StandardButton.Yes:
-            self.btn_save_button.setEnabled(False)
-            self.btn_delete_button.setEnabled(False)
-            self.btn_undo_changes_button.setEnabled(False)
-            self.table_songs_in_playlist_view.setEnabled(False)
-            self.music_folder_tree_view.setEnabled(False)
+            self._disable_all_widgets()
 
             self.signal_delete_playlist.emit((self.le_playlist_name.text(), self.le_walkman_music_folder.text()))
 
@@ -276,8 +267,8 @@ class View(qtw.QWidget):
 
         if response == qtw.QMessageBox.StandardButton.Yes:
             self.table_songs_in_playlist_model.clear()
-            self.btn_save_button.setEnabled(False)
-            self.btn_undo_changes_button.setEnabled(False)
+
+            self._disable_all_widgets()
 
             if self.cb_playlist_selection.currentIndex() > 1:
                 self.signal_initiate_scan_of_playlist.emit(self.cb_playlist_selection.currentText(), self.le_walkman_music_folder.text())
@@ -299,6 +290,11 @@ class View(qtw.QWidget):
             self.le_walkman_music_folder.setEnabled(False)
             self.btn_select_walkman_music_folder.setEnabled(False)
 
+            # clear out old information
+            self.cb_playlist_selection.clear()
+            self.cb_playlist_selection.addItems(['---', 'New Playlist'])
+            self.table_songs_in_playlist_model.clear()
+
             self.le_walkman_music_folder.setText(directory)
             self.signal_initiate_scan_of_music_folder.emit(directory)
 
@@ -309,6 +305,14 @@ class View(qtw.QWidget):
 
         :return:
         """
+        self.le_walkman_music_folder.setEnabled(False)
+        self.btn_select_walkman_music_folder.setEnabled(False)
+
+        # clear out old information
+        self.cb_playlist_selection.clear()
+        self.cb_playlist_selection.addItems(['---', 'New Playlist'])
+        self.table_songs_in_playlist_model.clear()
+
         self.signal_initiate_scan_of_music_folder.emit(self.le_walkman_music_folder.text())
 
     @qtc.Slot()
@@ -326,6 +330,8 @@ class View(qtw.QWidget):
         elif combo_index >= 1:
             self.table_songs_in_playlist_view.setEnabled(True)
             self.music_folder_tree_view.setEnabled(True)
+            self.btn_save_button.setEnabled(False)
+            self.btn_undo_changes_button.setEnabled(False)
 
             if not self.table_songs_in_playlist_model.is_table_empty():
                 self.table_songs_in_playlist_model.clear()
@@ -349,12 +355,9 @@ class View(qtw.QWidget):
         :param list_of_playlists: A list of playlist(s) found in the Walkman MUSIC folder.
         :return:
         """
-        # clear out old information
-        self.cb_playlist_selection.clear()
-        self.cb_playlist_selection.addItems(['---', 'New Playlist'])
-        self.table_songs_in_playlist_model.clear()
 
         # add in new information
+        self.previous_cb_playlist_selection_index = 0
         self.cb_playlist_selection.addItems(list_of_playlists)
         self.music_folder_tree_view.set_root_path(
             self.le_walkman_music_folder.text(),
@@ -379,6 +382,43 @@ class View(qtw.QWidget):
         """
         self.progress_bar.setValue(progress_value)
 
+    @qtc.Slot()
+    def reset_interface_after_deleting_playlist(self) -> None:
+        """
+        Resets the interface after the deleting playlist.
+
+        :return:
+        """
+        self.table_songs_in_playlist_model.clear()
+        self.cb_playlist_selection.remove_item(self.le_playlist_name.text())
+        self.le_playlist_name.clear()
+
+        self.le_walkman_music_folder.setEnabled(True)
+        self.btn_select_walkman_music_folder.setEnabled(True)
+        self.cb_playlist_selection.setEnabled(True)
+
+    @qtc.Slot()
+    def reset_interface_after_saving_playlist(self) -> None:
+        """
+        Resets the interface after the saving playlist.
+
+        :return:
+        """
+        self.progress_bar.reset()
+        self.table_songs_in_playlist_model.clear()
+        self.le_walkman_music_folder.setEnabled(True)
+        self.btn_select_walkman_music_folder.setEnabled(True)
+        self.cb_playlist_selection.setEnabled(True)
+
+        # Append playlist to the list of existing playlists if it does not exist in it
+        if self.le_playlist_name.text() not in self.cb_playlist_selection.all_items():
+            self.cb_playlist_selection.addItem(self.le_playlist_name.text())
+
+        self.le_playlist_name.clear()
+        self.cb_playlist_selection.setCurrentIndex(0)
+        self.previous_cb_playlist_selection_index = 0
+
+
 # *** Method(s) that affect Playlist table ***
     @qtc.Slot(tuple)
     def add_song_to_playlist(self, song: tuple) -> None:
@@ -395,6 +435,7 @@ class View(qtw.QWidget):
         )
         self.btn_save_button.setEnabled(True)
         self.btn_undo_changes_button.setEnabled(True)
+        self.playlist_has_been_modified = True
 
     @qtc.Slot(int)
     def song_to_remove_from_playlist(self, song_index: int) -> None:
@@ -404,9 +445,10 @@ class View(qtw.QWidget):
         :param song_index: The index of the song to be removed from the playlist.
         :return:
         """
-        self.table_songs_in_playlist_model.removeRow(row=song_index)
+        self.table_songs_in_playlist_model.removeRow(position=song_index)
         self.btn_save_button.setEnabled(True)
         self.btn_undo_changes_button.setEnabled(True)
+        self.playlist_has_been_modified = True
 
     @qtc.Slot(tuple)
     def update_playlist_table(self, songs_list: tuple) -> None:
@@ -421,64 +463,95 @@ class View(qtw.QWidget):
             rows=len(songs_list),
             data=songs_list
         )
-        self.table_songs_in_playlist_view.resizeColumnsToContents()
+
+        self.le_walkman_music_folder.setEnabled(True)
+        self.btn_select_walkman_music_folder.setEnabled(True)
+        self.cb_playlist_selection.setEnabled(True)
+        self.table_songs_in_playlist_view.setEnabled(True)
+        self.music_folder_tree_view.setEnabled(True)
+
+        if self.cb_playlist_selection.currentIndex() == 1:
+            self.le_playlist_name.setEnabled(True)
+        elif self.cb_playlist_selection.currentIndex() >= 2:
+            self.btn_delete_button.setEnabled(True)
+
+        self.playlist_has_been_modified = False
+
 
 # *** Method(s) that launch a messagebox ***
 
-    @qtc.Slot()
-    def messagebox_playlist_deleted(self) -> None:
-        response = qtw.QMessageBox.information(
-            self,
-            'Playlist Deleted',
-            'The playlist was deleted successfully!'
-        )
-
-        if response == qtw.QMessageBox.StandardButton.Ok:
-            self.table_songs_in_playlist_model.clear()
-            self.cb_playlist_selection.remove_item(self.le_playlist_name.text())
-            self.le_playlist_name.clear()
-
-    @qtc.Slot()
-    def messagebox_playlist_saved(self) -> None:
-        """
-        Launches messagebox informing the user the playlist was saved.
-
-        :return:
-        """
-        response = qtw.QMessageBox.information(
-            self,
-            'Playlist Saved!',
-            'The playlist was saved successfully!'
-        )
-
-        if response == qtw.QMessageBox.StandardButton.Ok:
-            self.progress_bar.reset()
-            self.table_songs_in_playlist_model.clear()
-            self.le_walkman_music_folder.setEnabled(True)
-            self.btn_select_walkman_music_folder.setEnabled(True)
-            self.cb_playlist_selection.setEnabled(True)
-
-            # Append playlist to the list of existing playlists if it does not exist in it
-            if self.le_playlist_name.text() not in self.cb_playlist_selection.all_items():
-                self.cb_playlist_selection.addItem(self.le_playlist_name.text())
-
-            self.le_playlist_name.clear()
-            self.cb_playlist_selection.setCurrentIndex(0)
-
-    @qtc.Slot()
-    def messagebox_system_error_detected(self) -> None:
+    @qtc.Slot(object)
+    def messagebox_system_error_detected(self, error: ErrorEnum) -> None:
         """
         Launches the messagebox to inform the user a system error had occurred.
 
         :return:
         """
+        message = ''
+        match error:
+            case ErrorEnum.SCAN_FOLDER_ERROR:
+                message = 'An error occurred while scanning the folder.'
+            case ErrorEnum.SAVE_PLAYLIST_ERROR:
+                message = 'An error occurred while saving the playlist.'
+            case ErrorEnum.EXTRACT_SONGS_ERROR:
+                message = 'An error occurred while extracting the songs from the playlist.'
+            case ErrorEnum.DELETE_PLAYLIST_ERROR:
+                message = 'An error occurred while deleting the playlist.'
+
         response = qtw.QMessageBox.critical(
             self,
             'System Error',
-            'The program ran into an error while working a process.'
+            message
         )
-        #TODO add in logic or something to know of the state of the interface when error occurred to enable correct widgets
+
         if response == qtw.QMessageBox.StandardButton.Ok:
             self.progress_bar.reset()
-            self.le_walkman_music_folder.setEnabled(True)
-            self.btn_select_walkman_music_folder.setEnabled(True)
+
+            # Enable the correct widgets based on error raised
+            match error:
+                case ErrorEnum.SCAN_FOLDER_ERROR:
+                    self.le_walkman_music_folder.setEnabled(True)
+                    self.btn_select_walkman_music_folder.setEnabled(True)
+
+                case ErrorEnum.SAVE_PLAYLIST_ERROR:
+                    self.le_walkman_music_folder.setEnabled(True)
+                    self.btn_select_walkman_music_folder.setEnabled(True)
+                    self.cb_playlist_selection.setEnabled(True)
+                    self.table_songs_in_playlist_view.setEnabled(True)
+                    self.music_folder_tree_view.setEnabled(True)
+                    self.btn_save_button.setEnabled(True)
+                    self.btn_undo_changes_button.setEnabled(True)
+
+                    if self.cb_playlist_selection.currentIndex() == 1:
+                        self.le_playlist_name.setEnabled(True)
+                    elif self.cb_playlist_selection.currentIndex() >= 2:
+                        self.btn_delete_button.setEnabled(True)
+
+                case ErrorEnum.EXTRACT_SONGS_ERROR:
+                    self.cb_playlist_selection.setEnabled(True)
+                    # TODO create a new method for ModifiedQComboBox that keeps track of previous index value
+
+                case ErrorEnum.DELETE_PLAYLIST_ERROR:
+                    self.le_walkman_music_folder.setEnabled(True)
+                    self.btn_select_walkman_music_folder.setEnabled(True)
+                    self.cb_playlist_selection.setEnabled(True)
+                    self.table_songs_in_playlist_view.setEnabled(True)
+                    self.music_folder_tree_view.setEnabled(True)
+                    self.btn_delete_button.setEnabled(True)
+
+                    if self.playlist_has_been_modified:
+                        self.btn_save_button.setEnabled(True)
+                        self.btn_undo_changes_button.setEnabled(True)
+
+# *** Method(s) that are private
+
+    def _disable_all_widgets(self) -> None:
+        self.le_walkman_music_folder.setEnabled(False)
+        self.btn_select_walkman_music_folder.setEnabled(False)
+        self.cb_playlist_selection.setEnabled(False)
+        self.le_playlist_name.setEnabled(False)
+        self.table_songs_in_playlist_view.setEnabled(False)
+        self.music_folder_tree_view.setEnabled(False)
+        self.btn_save_button.setEnabled(False)
+        self.btn_delete_button.setEnabled(False)
+        self.btn_undo_changes_button.setEnabled(False)
