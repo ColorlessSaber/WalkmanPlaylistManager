@@ -1,3 +1,4 @@
+import pathlib
 from typing import Any
 from PySide6 import (
     QtWidgets as qtw,
@@ -57,7 +58,7 @@ class MusicFolderTreeView(GenericFileSystemTreeView):
     The music folder tree view
     """
 
-    signal_song_to_add = qtc.Signal(str)
+    signal_song_to_add = qtc.Signal(tuple)
 
     def context_menu(self, pos: qtc.QPoint) -> None:
         # confirm the selection from the model is valid and the model had
@@ -76,10 +77,10 @@ class MusicFolderTreeView(GenericFileSystemTreeView):
 
         if self._model.fileInfo(index).isFile():
             action = menu.exec_(self.mapToGlobal(pos))
-            song_file = self._model.filePath(index)
 
             if action == add_song_to_playlist_action:
-                self.signal_song_to_add.emit(song_file)
+                path = pathlib.Path(self._model.filePath(index))
+                self.signal_song_to_add.emit((path.parent.parent.name, path.parent.name, path.name))
 
 
 class View(qtw.QWidget):
@@ -88,7 +89,6 @@ class View(qtw.QWidget):
     # Signals that connect to model slots
     signal_initiate_scan_of_music_folder = qtc.Signal(str)
     signal_initiate_scan_of_playlist = qtc.Signal(str, str)
-    signal_prep_song_for_playlist = qtc.Signal(str)
     signal_save_playlist = qtc.Signal(tuple)
     signal_delete_playlist = qtc.Signal(tuple)
 
@@ -168,7 +168,7 @@ class View(qtw.QWidget):
         """)
         self.music_folder_tree_view = MusicFolderTreeView(self)
         self.music_folder_tree_view.setEnabled(False)
-        self.music_folder_tree_view.signal_song_to_add.connect(self.signal_prep_song_for_playlist)
+        self.music_folder_tree_view.signal_song_to_add.connect(self.add_song_to_playlist)
 
         layout_music_folder = qtw.QVBoxLayout()
         layout_music_folder.addWidget(lbl_music_folder)

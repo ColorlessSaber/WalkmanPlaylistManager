@@ -6,9 +6,6 @@ from .threads import (
     SavingPlaylistThread,
     ExtractSongsFromPlaylistThread
 )
-from .functions import (
-    extract_artist_album_and_name_from_song_path
-)
 
 from .classes import ErrorEnum
 
@@ -22,23 +19,10 @@ class Model(qtc.QObject):
     signal_update_progress = qtc.Signal(int)
     signal_analysis_of_music_folder = qtc.Signal(list)
     signal_analysis_of_playlist = qtc.Signal(tuple)
-    signal_song_to_add_to_playlist = qtc.Signal(tuple)
     signal_playlist_successfully_saved = qtc.Signal()
     signal_playlist_successfully_deleted = qtc.Signal()
 
 # *** Methods that don't use threads to complete a task ***
-    @qtc.Slot(str)
-    def prep_song_for_playlist_table(self, song_path: str) -> None:
-        """
-        Prepares the song to be added to the playlist table. IE, extracts the artist, album,
-        and song name from the path to the song.
-
-        :param song_path: Path to the song.
-        :return:
-        """
-        song_info = extract_artist_album_and_name_from_song_path(song_path) # TODO move this to the MusicFolderView method
-        self.signal_song_to_add_to_playlist.emit(song_info)
-
     @qtc.Slot(tuple)
     def delete_selected_playlist(self, playlist_info: tuple) -> None:
         """
