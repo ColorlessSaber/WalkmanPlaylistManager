@@ -24,7 +24,5 @@ class ExtractSongsFromPlaylistThread(qtc.QRunnable):
             self.signals.progress.emit(100)
         except OSError:
             self.signals.error.emit(ErrorEnum.EXTRACT_SONGS_ERROR)
-        except BaseException:
-            self.signals.error.emit(ErrorEnum.EXTRACT_SONGS_ERROR)
         else:
             self.signals.finished.emit(songs_in_playlist)

@@ -418,7 +418,6 @@ class View(qtw.QWidget):
         self.cb_playlist_selection.setCurrentIndex(0)
         self.previous_cb_playlist_selection_index = 0
 
-
 # *** Method(s) that affect Playlist table ***
     @qtc.Slot(tuple)
     def add_song_to_playlist(self, song: tuple) -> None:
@@ -477,9 +476,7 @@ class View(qtw.QWidget):
 
         self.playlist_has_been_modified = False
 
-
 # *** Method(s) that launch a messagebox ***
-
     @qtc.Slot(object)
     def messagebox_system_error_detected(self, error: ErrorEnum) -> None:
         """
@@ -529,7 +526,8 @@ class View(qtw.QWidget):
 
                 case ErrorEnum.EXTRACT_SONGS_ERROR:
                     self.cb_playlist_selection.setEnabled(True)
-                    # TODO create a new method for ModifiedQComboBox that keeps track of previous index value
+                    self.le_playlist_name.clear()
+                    self.cb_playlist_selection.setCurrentIndex(0)
 
                 case ErrorEnum.DELETE_PLAYLIST_ERROR:
                     self.le_walkman_music_folder.setEnabled(True)
@@ -544,7 +542,6 @@ class View(qtw.QWidget):
                         self.btn_undo_changes_button.setEnabled(True)
 
 # *** Method(s) that are private
-
     def _disable_all_widgets(self) -> None:
         self.le_walkman_music_folder.setEnabled(False)
         self.btn_select_walkman_music_folder.setEnabled(False)
