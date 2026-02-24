@@ -389,7 +389,7 @@ class View(qtw.QWidget):
         self.table_songs_in_playlist_model.insert_rows(
             position=self.table_songs_in_playlist_model.rowCount(),
             rows=len(songs_list),
-            data=songs_list
+            data=reversed(songs_list) # reversing the order so it matches the order in the playlist
         )
 
         self.le_walkman_music_folder.setEnabled(True)

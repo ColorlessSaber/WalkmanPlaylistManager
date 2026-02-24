@@ -15,5 +15,4 @@ def extract_songs_from_playlist(name_of_playlist: str, playlist_directory_path: 
         clean_list_of_songs = [line_item.strip() for line_item in file.readlines()
                                if not playlist_markers.match(line_item)]
     broken_down_list_of_songs = [tuple(song.split('/')) for song in clean_list_of_songs]
-    broken_down_list_of_songs.reverse() # reversing the order so it matches the order in the playlist
     return tuple(broken_down_list_of_songs)
