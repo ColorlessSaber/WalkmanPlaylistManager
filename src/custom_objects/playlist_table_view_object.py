@@ -2,7 +2,7 @@ from PySide6 import (
     QtCore as qtc,
     QtWidgets as qtw
 )
-from custom_objects import GenericTableView
+from .generic_pyside_objects import GenericTableView
 
 class PlaylistTableView(GenericTableView):
     """

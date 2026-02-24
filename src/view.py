@@ -6,9 +6,11 @@ from custom_objects import (
     ModifiedQComboBox,
 )
 from classes import ErrorEnum
-from playlist_table_object import PlaylistTable
-from playlist_table_view_object import PlaylistTableView
-from music_folder_tree_view_object import MusicFolderTreeView
+from custom_objects import (
+    PlaylistTable,
+    PlaylistTableView,
+    MusicFolderTreeView
+)
 
 class View(qtw.QWidget):
     """The front-end of the program"""

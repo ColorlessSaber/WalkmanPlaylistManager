@@ -2,14 +2,13 @@
 __init__ file for custom_objects folder
 """
 __all__ = [
-    'GenericTable',
-    'GenericTableView',
-    'GenericFileSystemTreeView',
-    'ModifiedQComboBox'
+    'ModifiedQComboBox',
+    'MusicFolderTreeView',
+    'PlaylistTable',
+    'PlaylistTableView',
 ]
 
-
-from .generic_table_object import GenericTable
-from .generic_table_view_object import GenericTableView
-from .generic_file_system_tree_view_object import GenericFileSystemTreeView
-from .modified_qcombobox import ModifiedQComboBox
+from .modified_pyside_widgets import ModifiedQComboBox
+from .music_folder_tree_view_object import MusicFolderTreeView
+from .playlist_table_object import PlaylistTable
+from .playlist_table_view_object import PlaylistTableView

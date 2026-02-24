@@ -1,6 +1,6 @@
 from PySide6 import QtCore as qtc
 from typing import Any
-from custom_objects import GenericTable
+from .generic_pyside_objects import GenericTable
 
 class PlaylistTable(GenericTable):
     """Table for showing what song(s) are in the playlist"""
