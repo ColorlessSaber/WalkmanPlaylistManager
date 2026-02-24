@@ -1,13 +1,10 @@
-import pathlib
-
 from PySide6 import QtCore as qtc
 from .threads import (
     ScanMusicFolderThread,
     SavingPlaylistThread,
-    ExtractSongsFromPlaylistThread
+    ExtractSongsFromPlaylistThread,
+    DeletePlaylistThread
 )
-
-from .classes import ErrorEnum
 
 class Model(qtc.QObject):
     """The back-end of the application."""
@@ -23,22 +20,6 @@ class Model(qtc.QObject):
     signal_playlist_successfully_deleted = qtc.Signal()
 
 # *** Methods that don't use threads to complete a task ***
-    @qtc.Slot(tuple)
-    def delete_selected_playlist(self, playlist_info: tuple) -> None:
-        """
-        Deletes the selected playlist.
-
-        :param playlist_info: A tuple containing the name of the playlist and where its directory location.
-        :return:
-        """
-        try: # TODO make this a thread
-            playlist_name, directory = playlist_info
-            file_path = pathlib.Path(directory).joinpath(playlist_name + '.M3U8')
-            file_path.unlink()
-        except FileNotFoundError:
-            self.signal_error_message.emit(ErrorEnum.DELETE_PLAYLIST_ERROR)
-        else:
-            self.signal_playlist_successfully_deleted.emit()
 
 # *** Methods that use threads to complete a task ***
     @qtc.Slot(str)
@@ -84,3 +65,17 @@ class Model(qtc.QObject):
         save_playlist_thread.signals.error.connect(self.signal_error_message.emit)
         save_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_saved.emit)
         self.thread_pool.start(save_playlist_thread)
+
+    @qtc.Slot(tuple)
+    def start_delete_selected_playlist_thread(self, playlist_info: tuple) -> None:
+        """
+        Starts the thread for deleting selected playlist.
+
+        :param playlist_info: A tuple containing the name of the playlist and where its directory location.
+        :return:
+        """
+        delete_playlist_thread = DeletePlaylistThread(*playlist_info)
+        delete_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
+        delete_playlist_thread.signals.error.connect(self.signal_error_message.emit)
+        delete_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_deleted.emit)
+        self.thread_pool.start(delete_playlist_thread)

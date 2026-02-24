@@ -28,4 +28,3 @@ def generate_playlist(song_list: list, playlist_name: str, directory_path: str) 
         for song in song_list:
             artist, album, track = song
             file.write(f"#EXTINF:,\n{artist}/{album}/{track}\n")
-

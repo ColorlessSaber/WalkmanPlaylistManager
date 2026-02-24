@@ -397,6 +397,8 @@ class View(qtw.QWidget):
         self.btn_select_walkman_music_folder.setEnabled(True)
         self.cb_playlist_selection.setEnabled(True)
 
+        self.progress_bar.reset()
+
     @qtc.Slot()
     def reset_interface_after_saving_playlist(self) -> None:
         """

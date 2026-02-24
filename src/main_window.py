@@ -24,7 +24,7 @@ class MainWindow(qtw.QMainWindow):
         self.view.signal_initiate_scan_of_music_folder.connect(self.model.start_scan_of_music_folder_thread)
         self.view.signal_initiate_scan_of_playlist.connect(self.model.start_extract_of_songs_from_playlist_thread)
         self.view.signal_save_playlist.connect(self.model.start_saving_playlist_thread)
-        self.view.signal_delete_playlist.connect(self.model.delete_selected_playlist)
+        self.view.signal_delete_playlist.connect(self.model.start_delete_selected_playlist_thread)
 
         # model signals that connect to the view slots
         self.model.signal_analysis_of_music_folder.connect(self.view.update_screen_information)
