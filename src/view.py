@@ -2,14 +2,12 @@ from PySide6 import (
     QtWidgets as qtw,
     QtCore as qtc,
 )
-from custom_objects import (
-    ModifiedQComboBox,
-)
-from classes import ErrorEnum
-from custom_objects import (
+from .classes import ErrorEnum
+from .custom_objects import (
     PlaylistTable,
     PlaylistTableView,
-    MusicFolderTreeView
+    MusicFolderTreeView,
+    ModifiedQComboBox
 )
 
 class View(qtw.QWidget):

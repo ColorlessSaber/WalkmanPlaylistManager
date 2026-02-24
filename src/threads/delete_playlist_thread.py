@@ -1,6 +1,6 @@
 import pathlib
 from PySide6 import QtCore as qtc
-from classes import (
+from ..classes import (
     DefaultThreadSignals,
     ErrorEnum
 )
