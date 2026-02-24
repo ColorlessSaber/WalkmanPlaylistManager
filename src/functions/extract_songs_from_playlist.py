@@ -1,4 +1,5 @@
-import re, pathlib
+import re
+import pathlib
 
 def extract_songs_from_playlist(name_of_playlist: str, playlist_directory_path: str) -> tuple:
     """
