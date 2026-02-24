@@ -1,87 +1,14 @@
-import pathlib
-from typing import Any
 from PySide6 import (
     QtWidgets as qtw,
     QtCore as qtc,
 )
 from custom_objects import (
-    GenericTable,
-    GenericTableView,
-    GenericFileSystemTreeView,
     ModifiedQComboBox,
 )
 from classes import ErrorEnum
-
-class PlaylistTable(GenericTable):
-    """Table for showing what song(s) are in the playlist"""
-    def insert_rows(self, position, rows, data, parent=qtc.QModelIndex()) -> None:
-        """Insert rows into the table"""
-        self.beginInsertRows(parent, position, position + rows - 1)
-        for item in data:
-            self._data.insert(position, item)
-        self.endInsertRows()
-
-    def insert_row(self, position, row, data, parent=qtc.QModelIndex()) -> None:
-        """Insert a single row into the table"""
-        self.beginInsertRows(parent, position, position + row - 1)
-        self._data.insert(position, data)
-        self.endInsertRows()
-
-    def extract_data(self) -> list[Any]:
-        """
-        Returns the data that is stored in the table
-        """
-        return self._data
-
-    def is_table_empty(self) -> bool:
-        """
-        Returns True if the table is empty.
-        """
-        return True if not self._data else False
-
-class PlaylistTableView(GenericTableView):
-    """
-    The playlist table view
-    """
-    signal_remove_song = qtc.Signal(int)
-
-    def context_menu(self, pos: qtc.QPoint) -> None:
-        menu = qtw.QMenu()
-        remove_song_action = menu.addAction("Remove Song")
-
-        action = menu.exec_(self.mapToGlobal(pos))
-        if action == remove_song_action:
-            self.signal_remove_song.emit(self.indexAt(pos).row())
-
-class MusicFolderTreeView(GenericFileSystemTreeView):
-    """
-    The music folder tree view
-    """
-
-    signal_song_to_add = qtc.Signal(tuple)
-
-    def context_menu(self, pos: qtc.QPoint) -> None:
-        # confirm the selection from the model is valid and the model had
-        # initialized properly
-        selection_model = self._tree_view.selectionModel()
-        if not selection_model or not selection_model.hasSelection():
-            return
-
-        # confirm the index is valid (IE, the user clicked on an item)
-        index = selection_model.currentIndex()
-        if not index.isValid():
-            return
-
-        menu = qtw.QMenu()
-        add_song_to_playlist_action = menu.addAction("Add Song to Playlist")
-
-        if self._model.fileInfo(index).isFile():
-            action = menu.exec_(self.mapToGlobal(pos))
-
-            if action == add_song_to_playlist_action:
-                path = pathlib.Path(self._model.filePath(index))
-                self.signal_song_to_add.emit((path.parent.parent.name, path.parent.name, path.name))
-
+from playlist_table_object import PlaylistTable
+from playlist_table_view_object import PlaylistTableView
+from music_folder_tree_view_object import MusicFolderTreeView
 
 class View(qtw.QWidget):
     """The front-end of the program"""
@@ -357,7 +284,6 @@ class View(qtw.QWidget):
         """
 
         # add in new information
-        self.previous_cb_playlist_selection_index = 0
         self.cb_playlist_selection.addItems(list_of_playlists)
         self.music_folder_tree_view.set_root_path(
             self.le_walkman_music_folder.text(),
@@ -418,7 +344,6 @@ class View(qtw.QWidget):
 
         self.le_playlist_name.clear()
         self.cb_playlist_selection.setCurrentIndex(0)
-        self.previous_cb_playlist_selection_index = 0
 
 # *** Method(s) that affect Playlist table ***
     @qtc.Slot(tuple)
