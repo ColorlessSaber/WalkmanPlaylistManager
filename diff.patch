@@ -1,0 +1,1787 @@
+diff --git a/.github/workflows/executable_build.yml b/.github/workflows/executable_build.yml
+deleted file mode 100644
+index 125cc2f..0000000
+--- a/.github/workflows/executable_build.yml
++++ /dev/null
+@@ -1,47 +0,0 @@
+-name: executable_build.yml
+-on:
+-  workflow_dispatch:
+-
+-jobs:
+-  build:
+-    strategy:
+-      matrix:
+-        os: [macos-latest, ubuntu-latest, windows-latest]
+-
+-    runs-on: ${{ matrix.os }}
+-
+-    steps:
+-      - name: Check-out repository
+-        uses: actions/checkout@v4
+-
+-      - name: Setup Python
+-        uses: actions/setup-python@v5
+-        with:
+-          python-version: '3.13.12'
+-          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+-          cache: 'pip'
+-          cache-dependency-path: |
+-            **/requirements*.txt
+-
+-      - name: Install Dependencies
+-        run: |
+-          pip install -r requirements.txt
+-
+-      - name: Build Executable
+-        uses: Nuitka/Nuitka-Action@main
+-        with:
+-          nuitka-version: main
+-          script-name: main.py
+-          mode: app
+-          enable-plugins: pyside6
+-
+-      - name: Upload Artifacts
+-        uses: actions/upload-artifact@v4
+-        with:
+-          name: ${{ runner.os }} Build
+-          path: |
+-            build/*.exe
+-            build/*.bin
+-            build/*.app/**/*
+-            build/*.dist/**/*
+-          include-hidden-files: true
+\ No newline at end of file
+diff --git a/.github/workflows/lint_code.yml b/.github/workflows/lint_code.yml
+deleted file mode 100644
+index 2e6cad9..0000000
+--- a/.github/workflows/lint_code.yml
++++ /dev/null
+@@ -1,29 +0,0 @@
+-name: lint_code.yml
+-on:
+-  push:
+-    branches:
+-      - main
+-  pull_request:
+-    branches:
+-      - main
+-
+-jobs:
+-  lint:
+-    runs-on: ubuntu-latest
+-    steps:
+-      - name: Checkout code
+-        uses: actions/checkout@v6.0.1
+-
+-      - name: Set up Python
+-        uses: actions/setup-python@v6.1.0
+-        with:
+-          python-version: "3.13"
+-          cache: "pip"
+-
+-      - name: Install dependencies
+-        run: |
+-          python -m pip install --upgrade pip
+-          python -m pip install ruff
+-
+-      - name: Run Ruff
+-        run: ruff check --output-format=github
+\ No newline at end of file
+diff --git a/.github/workflows/unittest.yml b/.github/workflows/unittest.yml
+deleted file mode 100644
+index 57b78b1..0000000
+--- a/.github/workflows/unittest.yml
++++ /dev/null
+@@ -1,29 +0,0 @@
+-name: unittest.yml
+-on:
+-  push:
+-    branches:
+-      - main
+-  pull_request:
+-    branches:
+-      - main
+-jobs:
+-  test:
+-    runs-on: ubuntu-latest
+-    steps:
+-      - name: Checkout code
+-        uses: actions/checkout@v6.0.2
+-
+-      - name: Set up Python
+-        uses: actions/setup-python@v6.1.0
+-        with:
+-          python-version: 3.13
+-
+-      - name: Install dependencies
+-        run: |
+-          sudo apt-get update
+-          sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0 libxcb-xinerama0 libxcb-xfixes0
+-          python -m pip install --upgrade pip
+-          pip install -r requirements_dev.txt
+-
+-      - name: Run pytest
+-        run: pytest
+diff --git a/LICENSE b/LICENSE
+deleted file mode 100644
+index 533799e..0000000
+--- a/LICENSE
++++ /dev/null
+@@ -1,21 +0,0 @@
+-MIT License
+-
+-Copyright (c) 2026 Michael Heilman
+-
+-Permission is hereby granted, free of charge, to any person obtaining a copy
+-of this software and associated documentation files (the "Software"), to deal
+-in the Software without restriction, including without limitation the rights
+-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-copies of the Software, and to permit persons to whom the Software is
+-furnished to do so, subject to the following conditions:
+-
+-The above copyright notice and this permission notice shall be included in all
+-copies or substantial portions of the Software.
+-
+-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-SOFTWARE.
+diff --git a/main.py b/main.py
+new file mode 100644
+index 0000000..3635535
+--- /dev/null
++++ b/main.py
+@@ -0,0 +1,12 @@
++"""
++The file to start the application
++"""
++import sys
++from PySide6 import QtWidgets as qtw
++
++from src import MainWindow
++
++if __name__ == '__main__':
++    app = qtw.QApplication(sys.argv)
++    mw = MainWindow()
++    sys.exit(app.exec())
+diff --git a/pyproject.toml b/pyproject.toml
+new file mode 100644
+index 0000000..a5f58d1
+--- /dev/null
++++ b/pyproject.toml
+@@ -0,0 +1,13 @@
++[build-system]
++requires = ["setuptools>=70"]
++build-backend = "setuptools.build_meta"
++
++[project]
++name = "WalkmanPlaylistManager"
++version = "1.0.0"
++requires-python = ">=3.13"
++readme = "README.md"
++
++[tool.pytest.ini_options]
++testpaths = ["tests"]
++pythonpath = [".", "src"]
+diff --git a/src/__init__.py b/src/__init__.py
+new file mode 100644
+index 0000000..09584d2
+--- /dev/null
++++ b/src/__init__.py
+@@ -0,0 +1,8 @@
++"""
++__init__ file for src folder
++"""
++__all__ = [
++    "MainWindow",
++]
++
++from .main_window import MainWindow
+diff --git a/src/classes/__init__.py b/src/classes/__init__.py
+new file mode 100644
+index 0000000..6137248
+--- /dev/null
++++ b/src/classes/__init__.py
+@@ -0,0 +1,10 @@
++"""
++__init__ file for classes folder
++"""
++__all__ = [
++    'DefaultThreadSignals',
++    'ErrorEnum'
++]
++
++from .default_thread_signals import DefaultThreadSignals
++from .error_enum import ErrorEnum
+\ No newline at end of file
+diff --git a/src/classes/default_thread_signals.py b/src/classes/default_thread_signals.py
+new file mode 100644
+index 0000000..cdbe0cd
+--- /dev/null
++++ b/src/classes/default_thread_signals.py
+@@ -0,0 +1,13 @@
++from PySide6 import QtCore as qtc
++
++class DefaultThreadSignals(qtc.QObject):
++    """
++    Default thread signals
++
++    error -- Signal to indicate an error has occurred
++    progress -- Signal to update the progress bar
++    finished -- Signal to indicate the thread is finished. Can be overwritten to output an object or a specific datatype
++    """
++    error = qtc.Signal()
++    progress = qtc.Signal(int)
++    finished = qtc.Signal()
+\ No newline at end of file
+diff --git a/src/classes/error_enum.py b/src/classes/error_enum.py
+new file mode 100644
+index 0000000..dc151da
+--- /dev/null
++++ b/src/classes/error_enum.py
+@@ -0,0 +1,7 @@
++from enum import IntFlag, auto
++
++class ErrorEnum(IntFlag):
++    DELETE_PLAYLIST_ERROR = auto()
++    SCAN_FOLDER_ERROR = auto()
++    EXTRACT_SONGS_ERROR = auto()
++    SAVE_PLAYLIST_ERROR = auto()
+\ No newline at end of file
+diff --git a/src/custom_objects/__init__.py b/src/custom_objects/__init__.py
+new file mode 100644
+index 0000000..a52df97
+--- /dev/null
++++ b/src/custom_objects/__init__.py
+@@ -0,0 +1,14 @@
++"""
++__init__ file for custom_objects folder
++"""
++__all__ = [
++    'ModifiedQComboBox',
++    'MusicFolderTreeView',
++    'PlaylistTable',
++    'PlaylistTableView',
++]
++
++from .modified_pyside_widgets import ModifiedQComboBox
++from .music_folder_tree_view_object import MusicFolderTreeView
++from .playlist_table_object import PlaylistTable
++from .playlist_table_view_object import PlaylistTableView
+\ No newline at end of file
+diff --git a/src/custom_objects/generic_pyside_objects/__init__.py b/src/custom_objects/generic_pyside_objects/__init__.py
+new file mode 100644
+index 0000000..b03ffc2
+--- /dev/null
++++ b/src/custom_objects/generic_pyside_objects/__init__.py
+@@ -0,0 +1,12 @@
++"""
++__init__ file for generic_pyside_objects
++"""
++__all__ = [
++    'GenericFileSystemTreeView',
++    'GenericTable',
++    'GenericTableView'
++]
++
++from .generic_file_system_tree_view_object import GenericFileSystemTreeView
++from .generic_table_object import GenericTable
++from .generic_table_view_object import GenericTableView
+\ No newline at end of file
+diff --git a/src/custom_objects/generic_pyside_objects/generic_file_system_tree_view_object.py b/src/custom_objects/generic_pyside_objects/generic_file_system_tree_view_object.py
+new file mode 100644
+index 0000000..b24802e
+--- /dev/null
++++ b/src/custom_objects/generic_pyside_objects/generic_file_system_tree_view_object.py
+@@ -0,0 +1,81 @@
++from PySide6 import (
++    QtWidgets as qtw,
++    QtCore as qtc,
++)
++
++class GenericFileSystemTreeView(qtw.QWidget):
++    """
++    Generic PySide6 TreeView for a file system with context menu.
++    """
++
++    def __init__(self, parent=None):
++        super().__init__(parent)
++
++        layout = qtw.QVBoxLayout()
++        self.setLayout(layout)
++
++        self._model = qtw.QFileSystemModel()
++        self._model.setRootPath(qtc.QDir.rootPath()) # the default
++
++        self._tree_view = qtw.QTreeView()
++        self._tree_view.setModel(self._model)
++        self.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
++        self.customContextMenuRequested.connect(self.context_menu)
++
++        layout.addWidget(self._tree_view)
++
++    def set_root_path(
++            self,
++            path: str,
++            file_filters: list = None,
++            hidden_columns: list = None,
++            apply_filters_to_folders: bool = False) -> None:
++        """
++        Set the root path for the tree view.
++
++        :param path: The new root path for the tree view.
++        :param file_filters: What file filters to apply.
++        :param hidden_columns: Which columns to hide in the tree view; defaults to None.
++        :param apply_filters_to_folders: Have the filters apply to the folders; default False.
++        """
++        self._model.setRootPath(path)
++        self._tree_view.setRootIndex(self._model.index(path))
++
++        self._model.setNameFilterDisables(apply_filters_to_folders)
++
++        if file_filters is not None:
++            self._model.setNameFilters(file_filters)
++
++        if hidden_columns is not None:
++            for column in hidden_columns:
++                self._tree_view.setColumnHidden(column, True)
++
++    def context_menu(self, pos) -> None:
++        # confirm the selection from the model is valid and the model had
++        # initialized properly
++        selection_model = self._tree_view.selectionModel()
++        if not selection_model or not selection_model.hasSelection():
++            return
++
++        # confirm the index is valid (IE, the user clicked on an item)
++        index = selection_model.currentIndex()
++        if not index.isValid():
++            return
++
++        # Create menu with actions
++        menu = qtw.QMenu()
++        edit_action = menu.addAction("Edit")
++        info_action = menu.addAction("Info")
++        menu.addSeparator()
++        delete_action = menu.addAction("Delete")
++
++        if self._model.fileInfo(index).isFile():
++            action = menu.exec_(self._tree_view.viewport().mapToGlobal(pos))
++            item = self._model.fileInfo(index).path()
++
++            if action == edit_action:
++                print(f"Editing {item}")
++            elif action == info_action:
++                print(f"Info {item}")
++            elif action == delete_action:
++                print(f"Deleting {item}")
+diff --git a/src/custom_objects/generic_pyside_objects/generic_table_object.py b/src/custom_objects/generic_pyside_objects/generic_table_object.py
+new file mode 100644
+index 0000000..f171e7e
+--- /dev/null
++++ b/src/custom_objects/generic_pyside_objects/generic_table_object.py
+@@ -0,0 +1,91 @@
++from typing import Optional
++from PySide6 import QtCore as qtc
++
++class GenericTable(qtc.QAbstractTableModel):
++    """
++    A generic Pyside table object.
++    Able to handle any number of columns and rows, specify read-only indexes, and take in names for the columns.
++    """
++
++    def __init__(self, read_only_columns: Optional[list] = None, current_media_file_list: Optional[list] = None, column_names: Optional[list] = None):
++        super().__init__()
++        self._read_only_columns = read_only_columns if read_only_columns is not None else []
++        self._data = current_media_file_list if current_media_file_list is not None else []
++        self._headers = column_names if column_names is not None else []
++
++        # Validate that the number of columns in the data match the number of provided
++        # column names. If not, generate generic names for the missing columns.
++        if self._data:
++            if len(self._data[0]) != len(self._headers):
++                self._headers.extend([f'column_{i}' for i in range(len(self._headers), len(self._data[0]))])
++
++    def rowCount(self, parent=qtc.QModelIndex()) -> int:
++        """Return the number of rows in the table"""
++        return len(self._data)
++
++    def columnCount(self, parent=qtc.QModelIndex()) -> int:
++        """Return the number of columns in the table"""
++        return len(self._headers) if self._headers else 0
++
++    def data(self, index, role=qtc.Qt.ItemDataRole.DisplayRole) -> object | None:
++        """Return the data at the given index for display and editing"""
++        if not index.isValid():
++            return None
++
++        if role in (qtc.Qt.ItemDataRole.DisplayRole, qtc.Qt.ItemDataRole.EditRole):
++            return self._data[index.row()][index.column()]
++
++        return None
++
++    def setData(self, index, value, role = qtc.Qt.ItemDataRole.EditRole) -> object | None:
++        """Set the data at the given index for editing"""
++        if index.isValid() and role == qtc.Qt.ItemDataRole.EditRole:
++            self._data[index.row()][index.column()] = value
++            self.dataChanged.emit(index, index, [role])
++            return True
++        else:
++            return False
++
++    def flags(self, index) -> object:
++        """Return the flags attached to the given index"""
++        if not index.isValid():
++            return qtc.Qt.ItemFlag.ItemIsEnabled
++
++        if index.column() not in self._read_only_columns:
++            return super().flags(index) | qtc.Qt.ItemFlag.ItemIsEditable
++        else:
++            return super().flags(index)
++
++    def headerData(self, section, orientation, role=qtc.Qt.ItemDataRole.DisplayRole) -> object | str | None:
++        """Return the header labels"""
++        if role == qtc.Qt.ItemDataRole.DisplayRole and orientation == qtc.Qt.Orientation.Horizontal:
++            return self._headers[section]
++        else:
++            return super().headerData(section, orientation, role)
++
++    def insertRows(self, position, rows, parent=qtc.QModelIndex()) -> None:
++        """Insert rows into the table"""
++        self.beginInsertRows(parent, position, position + rows - 1)
++        for i in range(rows):
++            default_row = [''] * len(self._headers)
++            self._data.insert(position, default_row)
++        self.endInsertRows()
++
++    def removeRows(self, position, rows, parent=qtc.QModelIndex()) -> None:
++        """Remove rows from the table"""
++        self.beginRemoveRows(parent, position, position + rows - 1)
++        for i in range(rows):
++            del(self._data[position])
++        self.endRemoveRows()
++
++    def removeRow(self, position, row=1, parent=qtc.QModelIndex()) -> None:
++        """Remove a single row from the table"""
++        self.beginRemoveRows(parent, position, position + row - 1)
++        del(self._data[position])
++        self.endRemoveRows()
++
++    def clear(self) -> None:
++        """Clear the table"""
++        self.beginResetModel()
++        self._data.clear()
++        self.endResetModel()
+diff --git a/src/custom_objects/generic_pyside_objects/generic_table_view_object.py b/src/custom_objects/generic_pyside_objects/generic_table_view_object.py
+new file mode 100644
+index 0000000..beda72c
+--- /dev/null
++++ b/src/custom_objects/generic_pyside_objects/generic_table_view_object.py
+@@ -0,0 +1,36 @@
++from PySide6 import (
++    QtWidgets as qtw,
++    QtCore as qtc
++)
++
++class GenericTableView(qtw.QTableView):
++    """
++    Generic PySide Table View with default context menu.
++    """
++
++    def __init__(self, parent=None):
++        super().__init__(parent)
++
++        self.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
++        self.customContextMenuRequested.connect(self.context_menu)
++
++    def context_menu(self, pos: qtc.QPoint) -> None:
++        # Create menu with actions
++        menu = qtw.QMenu()
++        edit_action = menu.addAction("Edit Cell")
++        delete_action = menu.addAction("Delete Row")
++        menu.addSeparator()
++        print_value = menu.addAction("Print Value")
++
++        # Show the menu at the right-click position
++        action = menu.exec_(self.mapToGlobal(pos))
++
++        if action == edit_action:
++            row, col = self.indexAt(pos).row(), self.indexAt(pos).column()
++            print(f"\"Editing\" cell at row {row}, column {col}")
++        elif action == delete_action:
++            row, col = self.indexAt(pos).row(), self.indexAt(pos).column()
++            print(f"\"Deleting\" row {row}, column {col}")
++        elif action == print_value:
++            data = self.indexAt(pos).data()
++            print(f"Data in cell {data}")
+\ No newline at end of file
+diff --git a/src/custom_objects/modified_pyside_widgets/__init__.py b/src/custom_objects/modified_pyside_widgets/__init__.py
+new file mode 100644
+index 0000000..659604a
+--- /dev/null
++++ b/src/custom_objects/modified_pyside_widgets/__init__.py
+@@ -0,0 +1,8 @@
++"""
++__init__ file for modified_pyside_widgets
++"""
++__all__ = [
++    'ModifiedQComboBox',
++]
++
++from .modified_qcombobox import ModifiedQComboBox
+\ No newline at end of file
+diff --git a/src/custom_objects/modified_pyside_widgets/modified_qcombobox.py b/src/custom_objects/modified_pyside_widgets/modified_qcombobox.py
+new file mode 100644
+index 0000000..d0928e8
+--- /dev/null
++++ b/src/custom_objects/modified_pyside_widgets/modified_qcombobox.py
+@@ -0,0 +1,27 @@
++from PySide6 import QtWidgets as qtw
++
++class ModifiedQComboBox(qtw.QComboBox):
++
++    def __init__(self, parent=None, **kwargs):
++        super().__init__(parent, **kwargs)
++
++    def remove_item(self, item_name: str) -> None:
++        """
++        Removes an item from the QComboBox and sets current index to zero after changes.
++
++        :param item_name: Name of the item to remove
++        :return:
++        """
++        item_list = self.all_items()
++        item_list.remove(item_name)
++
++        self.clear()
++        self.addItems(item_list)
++
++    def all_items(self) -> list:
++        """
++        Returns a list of all items in the QComboBox.
++
++        :return: List of all items in the QComboBox.
++        """
++        return [self.itemText(index) for index in range(self.count())]
+\ No newline at end of file
+diff --git a/src/custom_objects/music_folder_tree_view_object.py b/src/custom_objects/music_folder_tree_view_object.py
+new file mode 100644
+index 0000000..6db0aa0
+--- /dev/null
++++ b/src/custom_objects/music_folder_tree_view_object.py
+@@ -0,0 +1,35 @@
++from PySide6 import (
++    QtCore as qtc,
++    QtWidgets as qtw
++)
++from .generic_pyside_objects import GenericFileSystemTreeView
++import pathlib
++
++class MusicFolderTreeView(GenericFileSystemTreeView):
++    """
++    The music folder tree view
++    """
++
++    signal_song_to_add = qtc.Signal(tuple)
++
++    def context_menu(self, pos: qtc.QPoint) -> None:
++        # confirm the selection from the model is valid and the model had
++        # initialized properly
++        selection_model = self._tree_view.selectionModel()
++        if not selection_model or not selection_model.hasSelection():
++            return
++
++        # confirm the index is valid (IE, the user clicked on an item)
++        index = selection_model.currentIndex()
++        if not index.isValid():
++            return
++
++        menu = qtw.QMenu()
++        add_song_to_playlist_action = menu.addAction("Add Song to Playlist")
++
++        if self._model.fileInfo(index).isFile():
++            action = menu.exec_(self.mapToGlobal(pos))
++
++            if action == add_song_to_playlist_action:
++                path = pathlib.Path(self._model.filePath(index))
++                self.signal_song_to_add.emit((path.parent.parent.name, path.parent.name, path.name))
+diff --git a/src/custom_objects/playlist_table_object.py b/src/custom_objects/playlist_table_object.py
+new file mode 100644
+index 0000000..f788469
+--- /dev/null
++++ b/src/custom_objects/playlist_table_object.py
+@@ -0,0 +1,30 @@
++from PySide6 import QtCore as qtc
++from typing import Any
++from .generic_pyside_objects import GenericTable
++
++class PlaylistTable(GenericTable):
++    """Table for showing what song(s) are in the playlist"""
++    def insert_rows(self, position, rows, data, parent=qtc.QModelIndex()) -> None:
++        """Insert rows into the table"""
++        self.beginInsertRows(parent, position, position + rows - 1)
++        for item in data:
++            self._data.insert(position, item)
++        self.endInsertRows()
++
++    def insert_row(self, position, row, data, parent=qtc.QModelIndex()) -> None:
++        """Insert a single row into the table"""
++        self.beginInsertRows(parent, position, position + row - 1)
++        self._data.insert(position, data)
++        self.endInsertRows()
++
++    def extract_data(self) -> list[Any]:
++        """
++        Returns the data that is stored in the table
++        """
++        return self._data
++
++    def is_table_empty(self) -> bool:
++        """
++        Returns True if the table is empty.
++        """
++        return True if not self._data else False
+\ No newline at end of file
+diff --git a/src/custom_objects/playlist_table_view_object.py b/src/custom_objects/playlist_table_view_object.py
+new file mode 100644
+index 0000000..48809f2
+--- /dev/null
++++ b/src/custom_objects/playlist_table_view_object.py
+@@ -0,0 +1,19 @@
++from PySide6 import (
++    QtCore as qtc,
++    QtWidgets as qtw
++)
++from .generic_pyside_objects import GenericTableView
++
++class PlaylistTableView(GenericTableView):
++    """
++    The playlist table view
++    """
++    signal_remove_song = qtc.Signal(int)
++
++    def context_menu(self, pos: qtc.QPoint) -> None:
++        menu = qtw.QMenu()
++        remove_song_action = menu.addAction("Remove Song")
++
++        action = menu.exec_(self.mapToGlobal(pos))
++        if action == remove_song_action:
++            self.signal_remove_song.emit(self.indexAt(pos).row())
+diff --git a/src/functions/__init__.py b/src/functions/__init__.py
+new file mode 100644
+index 0000000..b4435d6
+--- /dev/null
++++ b/src/functions/__init__.py
+@@ -0,0 +1,16 @@
++"""
++__init__ file for functions
++"""
++__all__ = [
++    'scan_for_playlists',
++    'walkman_playlist_checker',
++    'extract_songs_from_playlist',
++    'music_file_condition',
++    'generate_playlist'
++]
++
++from .scan_for_playlists import scan_for_playlists
++from .walkman_playlist_checker import walkman_playlist_checker
++from .extract_songs_from_playlist import extract_songs_from_playlist
++from .music_file_condition import music_file_condition
++from .generate_playlist import generate_playlist
+\ No newline at end of file
+diff --git a/src/functions/extract_songs_from_playlist.py b/src/functions/extract_songs_from_playlist.py
+new file mode 100644
+index 0000000..297c971
+--- /dev/null
++++ b/src/functions/extract_songs_from_playlist.py
+@@ -0,0 +1,19 @@
++import re
++import pathlib
++
++def extract_songs_from_playlist(name_of_playlist: str, playlist_directory_path: str) -> tuple:
++    """
++    Opens the playlist; reads the songs in the playlist; and save each song in a list where each entry is
++    the song's artist, album, and name.
++
++    :param name_of_playlist: Name of the playlist.
++    :param playlist_directory_path: Path to the playlist.
++    :return: A tuple of the songs in the playlist, each entry is a tuple (artist, album, name).
++    """
++    playlist_markers = re.compile(r"^#EXT\w+")  # markers used in Walkman playlists
++    full_playlist_path = str(pathlib.Path(playlist_directory_path).joinpath(name_of_playlist)) + '.M3U8'
++    with open(full_playlist_path, "r") as file:
++        clean_list_of_songs = [line_item.strip() for line_item in file.readlines()
++                               if not playlist_markers.match(line_item)]
++    broken_down_list_of_songs = [tuple(song.split('/')) for song in clean_list_of_songs]
++    return tuple(broken_down_list_of_songs)
+\ No newline at end of file
+diff --git a/src/functions/generate_playlist.py b/src/functions/generate_playlist.py
+new file mode 100644
+index 0000000..2390119
+--- /dev/null
++++ b/src/functions/generate_playlist.py
+@@ -0,0 +1,30 @@
++import pathlib
++
++def generate_playlist(song_list: list, playlist_name: str, directory_path: str) -> None:
++    """
++    Generate a playlist in the specified directory and filled with the songs in the provided list.
++
++    :param song_list: The list of songs to put in the playlist
++    :param playlist_name: The name of the playlist
++    :param directory_path: The directory where the playlist is stored
++    :return:
++    """
++    # Create a new playlist with .M3U8 extension. if playlist already exist, override the contents
++    # with the new additions/changes.
++    with open(pathlib.Path(directory_path).joinpath(playlist_name + ".M3U8"), "wt") as file:
++
++    # A Sony Walkman playlist has the following structure:
++    #
++    # #EXTM3U
++    # #EXTINF:,
++    # artist/album/song_with_extension
++    # #EXTINF:,
++    # ...
++    # #EXTINF:,
++    # artist/album/song_with_extension (The last song in playlist)
++    #
++    # The following code generates this structure.
++        file.write("#EXTM3U\n")
++        for song in song_list:
++            artist, album, track = song
++            file.write(f"#EXTINF:,\n{artist}/{album}/{track}\n")
+diff --git a/src/functions/music_file_condition.py b/src/functions/music_file_condition.py
+new file mode 100644
+index 0000000..2b779a1
+--- /dev/null
++++ b/src/functions/music_file_condition.py
+@@ -0,0 +1,11 @@
++def music_file_condition(file: str) -> bool:
++    """
++    Validates that the given file is a music file
++
++    :param file: the file to validate
++    :return: True if file is a music file, False otherwise
++    """
++    if any(file.endswith(file_extension) for file_extension in [".mp3", ".wav", ".m4a", ".flac"]):
++        return True
++    else:
++        return False
+\ No newline at end of file
+diff --git a/src/functions/scan_for_playlists.py b/src/functions/scan_for_playlists.py
+new file mode 100644
+index 0000000..a09e203
+--- /dev/null
++++ b/src/functions/scan_for_playlists.py
+@@ -0,0 +1,26 @@
++import pathlib
++from typing import Callable
++from PySide6 import QtCore as qtc
++
++def scan_for_playlists(
++        music_folder_dir_path: str,
++        playlist_file_condition: Callable[..., bool],
++        progress_signal: qtc.Signal = None) -> list:
++    """
++    Takes the given directory path, find playlists in the folder, and return them in a list.
++
++    :param music_folder_dir_path: Path to the music folder directory.
++    :param playlist_file_condition: Function to check if the file is a valid playlist.
++    :param progress_signal: Signal to report the progress status.
++    :return: list of playlist(s)
++    """
++    if progress_signal is not None:
++        progress_signal.emit(40)
++
++    playlists_found = [entry.name.removesuffix('.M3U8') for entry in pathlib.Path(music_folder_dir_path).iterdir()
++                       if entry.is_file() and playlist_file_condition(entry.name)]
++
++    if progress_signal is not None:
++        progress_signal.emit(60)
++
++    return playlists_found
+\ No newline at end of file
+diff --git a/src/functions/walkman_playlist_checker.py b/src/functions/walkman_playlist_checker.py
+new file mode 100644
+index 0000000..03553c7
+--- /dev/null
++++ b/src/functions/walkman_playlist_checker.py
+@@ -0,0 +1,15 @@
++def walkman_playlist_checker(file_to_check: str) -> bool:
++    """
++    Checks to see if the given file is a valid Walkman music playlist.
++    Does this by checking two things:
++    1) files is a .M3U8 file
++    2) does not start with a '._'
++
++    :param file_to_check: the file name to validate
++    :return: True if the file is a valid Walkman music playlist, False otherwise
++    """
++    if file_to_check.endswith(".M3U8") and not file_to_check.startswith("._"):
++        return True
++    else:
++        return False
++
+diff --git a/src/main_window.py b/src/main_window.py
+new file mode 100644
+index 0000000..3352dc2
+--- /dev/null
++++ b/src/main_window.py
+@@ -0,0 +1,55 @@
++from PySide6 import (
++    QtWidgets as qtw,
++)
++
++from .view import View
++from .model import Model
++
++class MainWindow(qtw.QMainWindow):
++    """The main window for the application"""
++
++    def __init__(self):
++        super().__init__()
++
++        self.view = View()
++        self.model = Model()
++        self.setCentralWidget(self.view)
++        self.setMinimumSize(
++            1600, # width
++            1200  # height
++        )
++        self.setWindowTitle("Walkman Playlist Manager")
++
++        # view signals that connect to the model slots
++        self.view.signal_initiate_scan_of_music_folder.connect(self.model.start_scan_of_music_folder_thread)
++        self.view.signal_initiate_scan_of_playlist.connect(self.model.start_extract_of_songs_from_playlist_thread)
++        self.view.signal_save_playlist.connect(self.model.start_saving_playlist_thread)
++        self.view.signal_delete_playlist.connect(self.model.start_delete_selected_playlist_thread)
++
++        # model signals that connect to the view slots
++        self.model.signal_analysis_of_music_folder.connect(self.view.update_screen_information)
++        self.model.signal_analysis_of_playlist.connect(self.view.update_playlist_table)
++        self.model.signal_update_progress.connect(self.view.update_progress_bar)
++        self.model.signal_error_message.connect(self.view.messagebox_system_error_detected)
++        self.model.signal_playlist_successfully_saved.connect(self.view.reset_interface_after_saving_playlist)
++        self.model.signal_playlist_successfully_deleted.connect(self.view.reset_interface_after_deleting_playlist)
++
++        self.show()
++
++    # *** Main Window Methods ***
++    def closeEvent(self, event) -> None:
++        """
++        Close the application gracefully.
++        """
++        response = qtw.QMessageBox.question(
++            self,
++            'Close Application?',
++            'Are you sure you want to close the application?',
++            buttons=qtw.QMessageBox.StandardButton.Yes | qtw.QMessageBox.StandardButton.No,
++            defaultButton=qtw.QMessageBox.StandardButton.Yes
++        )
++
++        if response == qtw.QMessageBox.StandardButton.Yes:
++            event.accept()
++        else:
++            event.ignore()
+\ No newline at end of file
+diff --git a/src/model.py b/src/model.py
+new file mode 100644
+index 0000000..13f3c6b
+--- /dev/null
++++ b/src/model.py
+@@ -0,0 +1,81 @@
++from PySide6 import QtCore as qtc
++from .threads import (
++    ScanMusicFolderThread,
++    SavingPlaylistThread,
++    ExtractSongsFromPlaylistThread,
++    DeletePlaylistThread
++)
++
++class Model(qtc.QObject):
++    """The back-end of the application."""
++
++    thread_pool = qtc.QThreadPool().globalInstance()
++
++    # Signals that connect to view slots
++    signal_error_message = qtc.Signal(object)
++    signal_update_progress = qtc.Signal(int)
++    signal_analysis_of_music_folder = qtc.Signal(list)
++    signal_analysis_of_playlist = qtc.Signal(tuple)
++    signal_playlist_successfully_saved = qtc.Signal()
++    signal_playlist_successfully_deleted = qtc.Signal()
++
++# *** Methods that don't use threads to complete a task ***
++
++# *** Methods that use threads to complete a task ***
++    @qtc.Slot(str)
++    def start_scan_of_music_folder_thread(self, directory: str) -> None:
++        """
++        Starts the thread for scanning the Walkman Music Folder.
++
++        :param directory: Location of the Walkman Music Folder.
++        :return:
++        """
++        scan_music_folder_thread = ScanMusicFolderThread(directory)
++        scan_music_folder_thread.signals.progress.connect(self.signal_update_progress.emit)
++        scan_music_folder_thread.signals.error.connect(self.signal_error_message.emit)
++        scan_music_folder_thread.signals.finished.connect(self.signal_analysis_of_music_folder.emit)
++        self.thread_pool.start(scan_music_folder_thread)
++
++    @qtc.Slot(str)
++    def start_extract_of_songs_from_playlist_thread(self, playlist_name: str, playlist_path: str) -> None:
++        """
++        Starts the thread for extracting songs from selected playlist.
++
++        :param playlist_name: Name of the playlist.
++        :param playlist_path: Path to the playlist.
++        :return:
++        """
++        extract_songs_from_playlist_thread = ExtractSongsFromPlaylistThread(playlist_name, playlist_path)
++        extract_songs_from_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
++        extract_songs_from_playlist_thread.signals.error.connect(self.signal_error_message.emit)
++        extract_songs_from_playlist_thread.signals.finished.connect(self.signal_analysis_of_playlist.emit)
++        self.thread_pool.start(extract_songs_from_playlist_thread)
++
++    @qtc.Slot(tuple)
++    def start_saving_playlist_thread(self, playlist_info: tuple) -> None:
++        """
++        Starts the thread for saving a new/existing playlist.
++
++        :param playlist_info: A tuple containing the: songs that will go in playlist, playlist name,
++        and directory to save the playlist in.
++        :return:
++        """
++        save_playlist_thread = SavingPlaylistThread(*playlist_info)
++        save_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
++        save_playlist_thread.signals.error.connect(self.signal_error_message.emit)
++        save_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_saved.emit)
++        self.thread_pool.start(save_playlist_thread)
++
++    @qtc.Slot(tuple)
++    def start_delete_selected_playlist_thread(self, playlist_info: tuple) -> None:
++        """
++        Starts the thread for deleting selected playlist.
++
++        :param playlist_info: A tuple containing the name of the playlist and where its directory location.
++        :return:
++        """
++        delete_playlist_thread = DeletePlaylistThread(*playlist_info)
++        delete_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
++        delete_playlist_thread.signals.error.connect(self.signal_error_message.emit)
++        delete_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_deleted.emit)
++        self.thread_pool.start(delete_playlist_thread)
+diff --git a/src/threads/__init__.py b/src/threads/__init__.py
+new file mode 100644
+index 0000000..bfa64ac
+--- /dev/null
++++ b/src/threads/__init__.py
+@@ -0,0 +1,14 @@
++"""
++__init__ file for threads folder
++"""
++__all__ = [
++    'ScanMusicFolderThread',
++    'SavingPlaylistThread',
++    'ExtractSongsFromPlaylistThread',
++    'DeletePlaylistThread',
++]
++
++from .scan_music_folder_thread import ScanMusicFolderThread
++from .saving_playlist_thread import SavingPlaylistThread
++from .extract_songs_from_playlist_thread import ExtractSongsFromPlaylistThread
++from .delete_playlist_thread import DeletePlaylistThread
+\ No newline at end of file
+diff --git a/src/threads/delete_playlist_thread.py b/src/threads/delete_playlist_thread.py
+new file mode 100644
+index 0000000..326ffc6
+--- /dev/null
++++ b/src/threads/delete_playlist_thread.py
+@@ -0,0 +1,30 @@
++import pathlib
++from PySide6 import QtCore as qtc
++from classes import (
++    DefaultThreadSignals,
++    ErrorEnum
++)
++
++class DeletePlaylistThread(qtc.QRunnable):
++    class ThreadSignals(DefaultThreadSignals):
++        error = qtc.Signal(object)
++
++    def __init__(self, playlist_name: str, directory: str):
++        super().__init__()
++        self.playlist_name = playlist_name
++        self.directory = directory
++
++        self.signals = self.ThreadSignals()
++
++    @qtc.Slot()
++    def run(self) -> None:
++        try:
++            self.signals.progress.emit(30)
++            file_path = pathlib.Path(self.directory).joinpath(self.playlist_name + '.M3U8')
++            self.signals.progress.emit(60)
++            file_path.unlink()
++            self.signals.progress.emit(100)
++        except FileNotFoundError:
++            self.signals.error.emit(ErrorEnum.DELETE_PLAYLIST_ERROR)
++        else:
++            self.signals.finished.emit()
+diff --git a/src/threads/extract_songs_from_playlist_thread.py b/src/threads/extract_songs_from_playlist_thread.py
+new file mode 100644
+index 0000000..0d57aa5
+--- /dev/null
++++ b/src/threads/extract_songs_from_playlist_thread.py
+@@ -0,0 +1,28 @@
++from PySide6 import QtCore as qtc
++from ..classes import (
++    DefaultThreadSignals,
++    ErrorEnum
++)
++from ..functions import extract_songs_from_playlist
++
++class ExtractSongsFromPlaylistThread(qtc.QRunnable):
++    class ThreadSignals(DefaultThreadSignals):
++        error = qtc.Signal(object)
++        finished = qtc.Signal(tuple)
++
++    def __init__(self, name_of_playlist: str, path_to_playlist: str):
++        super().__init__()
++        self.name_of_playlist = name_of_playlist
++        self.path_to_playlist = path_to_playlist
++        self.signals = self.ThreadSignals()
++
++    @qtc.Slot()
++    def run(self) -> None:
++        try:
++            self.signals.progress.emit(20)
++            songs_in_playlist = extract_songs_from_playlist(self.name_of_playlist, self.path_to_playlist)
++            self.signals.progress.emit(100)
++        except OSError:
++            self.signals.error.emit(ErrorEnum.EXTRACT_SONGS_ERROR)
++        else:
++            self.signals.finished.emit(songs_in_playlist)
+\ No newline at end of file
+diff --git a/src/threads/saving_playlist_thread.py b/src/threads/saving_playlist_thread.py
+new file mode 100644
+index 0000000..aeda030
+--- /dev/null
++++ b/src/threads/saving_playlist_thread.py
+@@ -0,0 +1,30 @@
++from PySide6 import QtCore as qtc
++from ..classes import (
++    DefaultThreadSignals,
++    ErrorEnum
++)
++from ..functions import generate_playlist
++
++class SavingPlaylistThread(qtc.QRunnable):
++    class ThreadSignals(DefaultThreadSignals):
++        """Default signals for thread"""
++        error = qtc.Signal(object)
++
++    def __init__(self, list_of_songs: list, name_of_playlist: str, save_location: str) -> None:
++        super().__init__()
++        self.list_of_songs = list_of_songs
++        self.name_of_playlist = name_of_playlist
++        self.save_location = save_location
++
++        self.signals = self.ThreadSignals()
++
++    @qtc.Slot()
++    def run(self) -> None:
++        try:
++            self.signals.progress.emit(20)
++            generate_playlist(self.list_of_songs, self.name_of_playlist, self.save_location)
++            self.signals.progress.emit(100)
++        except OSError:
++            self.signals.error.emit(ErrorEnum.SAVE_PLAYLIST_ERROR)
++        else:
++            self.signals.finished.emit()
+\ No newline at end of file
+diff --git a/src/threads/scan_music_folder_thread.py b/src/threads/scan_music_folder_thread.py
+new file mode 100644
+index 0000000..199002a
+--- /dev/null
++++ b/src/threads/scan_music_folder_thread.py
+@@ -0,0 +1,30 @@
++from PySide6 import QtCore as qtc
++from ..classes import (
++    DefaultThreadSignals,
++    ErrorEnum
++)
++from ..functions import (
++    scan_for_playlists,
++    walkman_playlist_checker
++)
++
++class ScanMusicFolderThread(qtc.QRunnable):
++    class ThreadSignals(DefaultThreadSignals):
++        error = qtc.Signal(object)
++        finished = qtc.Signal(list)
++
++    def __init__(self, music_folder_path):
++        super().__init__()
++        self.music_folder_path = music_folder_path
++        self.signals = self.ThreadSignals()
++
++    @qtc.Slot()
++    def run(self) -> None:
++        try:
++            self.signals.progress.emit(20)
++            music_folder_info = scan_for_playlists(self.music_folder_path, walkman_playlist_checker, self.signals.progress)
++            self.signals.progress.emit(100)
++        except OSError:
++            self.signals.error.emit(ErrorEnum.SCAN_FOLDER_ERROR)
++        else:
++            self.signals.finished.emit(music_folder_info)
+diff --git a/src/view.py b/src/view.py
+new file mode 100644
+index 0000000..3189f81
+--- /dev/null
++++ b/src/view.py
+@@ -0,0 +1,483 @@
++from PySide6 import (
++    QtWidgets as qtw,
++    QtCore as qtc,
++)
++from custom_objects import (
++    ModifiedQComboBox,
++)
++from classes import ErrorEnum
++from custom_objects import (
++    PlaylistTable,
++    PlaylistTableView,
++    MusicFolderTreeView
++)
++
++class View(qtw.QWidget):
++    """The front-end of the program"""
++
++    # Signals that connect to model slots
++    signal_initiate_scan_of_music_folder = qtc.Signal(str)
++    signal_initiate_scan_of_playlist = qtc.Signal(str, str)
++    signal_save_playlist = qtc.Signal(tuple)
++    signal_delete_playlist = qtc.Signal(tuple)
++
++    def __init__(self):
++        super().__init__()
++
++        self.playlist_has_been_modified = False # Keeps track when the playlist have been modified--add/remove song(s)
++
++        # Walkman MUSIC folder selection section
++        lbl_walkman_music_folder = qtw.QLabel("Walkman Music Folder:", self)
++        self.le_walkman_music_folder = qtw.QLineEdit(self)
++        self.le_walkman_music_folder.returnPressed.connect(self.user_pasted_in_directory)
++        self.btn_select_walkman_music_folder = qtw.QPushButton("Select Folder", self)
++        self.btn_select_walkman_music_folder.clicked.connect(self.select_walkman_music_folder)
++        layout_walkman_music_folder = qtw.QHBoxLayout()
++        layout_walkman_music_folder.addWidget(lbl_walkman_music_folder)
++        layout_walkman_music_folder.addWidget(self.le_walkman_music_folder)
++        layout_walkman_music_folder.addWidget(self.btn_select_walkman_music_folder)
++
++        # Playlist selection/creation section
++        self.cb_playlist_selection = ModifiedQComboBox(
++            self,
++            editable=False,
++            insertPolicy=qtw.QComboBox.InsertPolicy.InsertAtBottom
++        )
++        self.cb_playlist_selection.addItems(['---', 'New Playlist'])
++        self.cb_playlist_selection.currentIndexChanged.connect(self.playlist_selection_changed)
++        self.cb_playlist_selection.setEnabled(False)
++        lbl_playlist_name = qtw.QLabel("Playlist Name:", self)
++        self.le_playlist_name = qtw.QLineEdit(self)
++        self.le_playlist_name.setEnabled(False)
++
++        self.playlist_section_group = qtw.QGroupBox("Playlist Selection/Creation", self)
++        self.playlist_section_group.setObjectName("playlist_selection_group")
++        self.playlist_section_group.setLayout(qtw.QHBoxLayout())
++        self.playlist_section_group.layout().addWidget(self.cb_playlist_selection)
++        self.playlist_section_group.layout().addWidget(lbl_playlist_name)
++        self.playlist_section_group.layout().addWidget(self.le_playlist_name)
++        self.playlist_section_group.setStyleSheet("""
++            #playlist_selection_group {
++                border: 2px solid grey;
++                border-radius: 5px;
++                padding-top: 16px;
++                font-weight: bold;
++            }
++        """)
++
++        # Songs in playlist view section
++        lbl_songs_in_playlist = qtw.QLabel("Songs in Playlist", self)
++        lbl_songs_in_playlist.setStyleSheet("""
++            QLabel {
++                font-size: 14px;
++                text-decoration: underline;
++            }   
++        """)
++        self.table_songs_in_playlist_view = PlaylistTableView(self)
++        self.table_songs_in_playlist_view.setSortingEnabled(False)
++        self.table_songs_in_playlist_model = PlaylistTable(
++            read_only_columns=[0],
++            column_names=['Artist', 'Album', 'Song'],
++        )
++        self.table_songs_in_playlist_view.setModel(self.table_songs_in_playlist_model)
++        self.table_songs_in_playlist_view.setEnabled(False)
++        self.table_songs_in_playlist_view.signal_remove_song.connect(self.song_to_remove_from_playlist)
++
++        layout_songs_in_playlist = qtw.QVBoxLayout()
++        layout_songs_in_playlist.addWidget(lbl_songs_in_playlist)
++        layout_songs_in_playlist.addWidget(self.table_songs_in_playlist_view)
++
++        # Music folder view section
++        lbl_music_folder = qtw.QLabel("Music Folder", self)
++        lbl_music_folder.setStyleSheet("""
++            QLabel {
++                font-size: 14px;
++                text-decoration: underline;
++            }   
++        """)
++        self.music_folder_tree_view = MusicFolderTreeView(self)
++        self.music_folder_tree_view.setEnabled(False)
++        self.music_folder_tree_view.signal_song_to_add.connect(self.add_song_to_playlist)
++
++        layout_music_folder = qtw.QVBoxLayout()
++        layout_music_folder.addWidget(lbl_music_folder)
++        layout_music_folder.addWidget(self.music_folder_tree_view)
++
++        # Buttons and progress bar section
++        self.btn_save_button = qtw.QPushButton("Save", self)
++        self.btn_save_button.clicked.connect(self.save_playlist)
++        self.btn_save_button.setEnabled(False)
++        self.btn_delete_button = qtw.QPushButton("Delete", self)
++        self.btn_delete_button.clicked.connect(self.delete_playlist)
++        self.btn_delete_button.setEnabled(False)
++        self.btn_undo_changes_button = qtw.QPushButton("Undo Changes", self)
++        self.btn_undo_changes_button.clicked.connect(self.undo_changes_to_playlist)
++        self.btn_undo_changes_button.setEnabled(False)
++        self.progress_bar = qtw.QProgressBar(self)
++        self.progress_bar.setMinimum(0)
++        self.progress_bar.setMaximum(100)
++
++        layout_buttons_and_progress = qtw.QHBoxLayout()
++        layout_buttons_and_progress.addWidget(self.btn_save_button)
++        layout_buttons_and_progress.addWidget(self.btn_delete_button)
++        layout_buttons_and_progress.addWidget(self.btn_undo_changes_button)
++        layout_buttons_and_progress.addWidget(self.progress_bar)
++
++        # Combining all layouts and widgets
++        layout_playlist_and_music_folder_tables = qtw.QHBoxLayout()
++        layout_playlist_and_music_folder_tables.addLayout(layout_songs_in_playlist)
++        layout_playlist_and_music_folder_tables.addLayout(layout_music_folder)
++
++        main_layout = qtw.QVBoxLayout()
++        main_layout.addLayout(layout_walkman_music_folder)
++        main_layout.addWidget(self.playlist_section_group)
++        main_layout.addLayout(layout_playlist_and_music_folder_tables)
++        main_layout.addLayout(layout_buttons_and_progress)
++
++        self.setLayout(main_layout)
++
++    @qtc.Slot()
++    def save_playlist(self):
++        """
++        Saves the playlist to the Walkman MUSIC folder.
++
++        :return:
++        """
++        if self.le_playlist_name.text() != "":
++            self._disable_all_widgets()
++
++            self.signal_save_playlist.emit((
++                self.table_songs_in_playlist_model.extract_data(),
++                self.le_playlist_name.text(),
++                self.le_walkman_music_folder.text(),
++            ))
++
++        else:
++            qtw.QMessageBox.information(
++                self,
++                'Name for Playlist',
++                'Please provide a name for the paylist to save the playlist.',
++            )
++
++    @qtc.Slot()
++    def delete_playlist(self):
++        """
++        Deletes the playlist from Walkman MUSIC folder.
++
++        :return:
++        """
++        response = qtw.QMessageBox.question(
++            self,
++            "Delete Playlist?",
++            "Are you sure you want to delete the playlist?",
++            buttons=qtw.QMessageBox.StandardButton.Yes | qtw.QMessageBox.StandardButton.No,
++            defaultButton=qtw.QMessageBox.StandardButton.Yes
++        )
++
++        if response == qtw.QMessageBox.StandardButton.Yes:
++            self._disable_all_widgets()
++
++            self.signal_delete_playlist.emit((self.le_playlist_name.text(), self.le_walkman_music_folder.text()))
++
++    @qtc.Slot()
++    def undo_changes_to_playlist(self):
++        """
++        Undo all changes to playlist.
++
++        :return:
++        """
++        response = qtw.QMessageBox.warning(
++            self,
++            "Undo Changes?",
++            "Are you sure you wish to undo all changes to playlist?",
++            buttons=qtw.QMessageBox.StandardButton.Yes | qtw.QMessageBox.StandardButton.No,
++            defaultButton=qtw.QMessageBox.StandardButton.Yes
++        )
++
++        if response == qtw.QMessageBox.StandardButton.Yes:
++            self.table_songs_in_playlist_model.clear()
++
++            self._disable_all_widgets()
++
++            if self.cb_playlist_selection.currentIndex() > 1:
++                self.signal_initiate_scan_of_playlist.emit(self.cb_playlist_selection.currentText(), self.le_walkman_music_folder.text())
++
++    @qtc.Slot()
++    def select_walkman_music_folder(self) -> None:
++        """
++        Opens a file dialog window to allow user to select their Walkman MUSIC folder.
++
++        :return:
++        """
++        directory = qtw.QFileDialog.getExistingDirectory(
++            self,
++            'Select folder...',
++            qtc.QDir.homePath()
++        )
++
++        if directory:
++            self.le_walkman_music_folder.setEnabled(False)
++            self.btn_select_walkman_music_folder.setEnabled(False)
++
++            # clear out old information
++            self.cb_playlist_selection.clear()
++            self.cb_playlist_selection.addItems(['---', 'New Playlist'])
++            self.table_songs_in_playlist_model.clear()
++
++            self.le_walkman_music_folder.setText(directory)
++            self.signal_initiate_scan_of_music_folder.emit(directory)
++
++    @qtc.Slot()
++    def user_pasted_in_directory(self) -> None:
++        """
++        Runs when the user pastes in the directory they wish to scan and hits enter.
++
++        :return:
++        """
++        self.le_walkman_music_folder.setEnabled(False)
++        self.btn_select_walkman_music_folder.setEnabled(False)
++
++        # clear out old information
++        self.cb_playlist_selection.clear()
++        self.cb_playlist_selection.addItems(['---', 'New Playlist'])
++        self.table_songs_in_playlist_model.clear()
++
++        self.signal_initiate_scan_of_music_folder.emit(self.le_walkman_music_folder.text())
++
++    @qtc.Slot()
++    def playlist_selection_changed(self, combo_index: int) -> None:
++        """
++        Runs when the user selects a different option from the playlist combo-box.
++
++        :param combo_index: The index of the combo-box.
++        :return:
++        """
++        if combo_index == 0:
++            self.le_playlist_name.setEnabled(False)
++            self.table_songs_in_playlist_view.setEnabled(False)
++            self.music_folder_tree_view.setEnabled(False)
++        elif combo_index >= 1:
++            self.table_songs_in_playlist_view.setEnabled(True)
++            self.music_folder_tree_view.setEnabled(True)
++            self.btn_save_button.setEnabled(False)
++            self.btn_undo_changes_button.setEnabled(False)
++
++            if not self.table_songs_in_playlist_model.is_table_empty():
++                self.table_songs_in_playlist_model.clear()
++
++            if combo_index == 1:
++                self.le_playlist_name.setEnabled(True)
++                self.btn_delete_button.setEnabled(False)
++                self.le_playlist_name.clear()
++            else:
++                self.le_playlist_name.setEnabled(False)
++                self.btn_delete_button.setEnabled(True)
++                self.le_playlist_name.setText(self.cb_playlist_selection.currentText())
++                self.signal_initiate_scan_of_playlist.emit(self.cb_playlist_selection.currentText(), self.le_walkman_music_folder.text())
++
++    @qtc.Slot(list)
++    def update_screen_information(self, list_of_playlists):
++        """
++        Loads in the playlist(s) found in the Walkman MUSIC folder, and generates the folder
++        structure for the music folder tree view.
++
++        :param list_of_playlists: A list of playlist(s) found in the Walkman MUSIC folder.
++        :return:
++        """
++
++        # add in new information
++        self.cb_playlist_selection.addItems(list_of_playlists)
++        self.music_folder_tree_view.set_root_path(
++            self.le_walkman_music_folder.text(),
++            ["*.mp3", "*.wav", "*.m4a", "*.flac"],
++            [1,3],
++        )
++
++        self.le_walkman_music_folder.setEnabled(True)
++        self.btn_select_walkman_music_folder.setEnabled(True)
++        self.cb_playlist_selection.setEnabled(True)
++        self.le_playlist_name.setEnabled(True)
++
++        self.progress_bar.reset()
++
++    @qtc.Slot(int)
++    def update_progress_bar(self, progress_value: int) -> None:
++        """
++        Updates the screen progress bar.
++
++        :param progress_value: The value to set the progress bar to.
++        :return:
++        """
++        self.progress_bar.setValue(progress_value)
++
++    @qtc.Slot()
++    def reset_interface_after_deleting_playlist(self) -> None:
++        """
++        Resets the interface after the deleting playlist.
++
++        :return:
++        """
++        self.table_songs_in_playlist_model.clear()
++        self.cb_playlist_selection.remove_item(self.le_playlist_name.text())
++        self.le_playlist_name.clear()
++
++        self.le_walkman_music_folder.setEnabled(True)
++        self.btn_select_walkman_music_folder.setEnabled(True)
++        self.cb_playlist_selection.setEnabled(True)
++
++        self.progress_bar.reset()
++
++    @qtc.Slot()
++    def reset_interface_after_saving_playlist(self) -> None:
++        """
++        Resets the interface after the saving playlist.
++
++        :return:
++        """
++        self.progress_bar.reset()
++        self.table_songs_in_playlist_model.clear()
++        self.le_walkman_music_folder.setEnabled(True)
++        self.btn_select_walkman_music_folder.setEnabled(True)
++        self.cb_playlist_selection.setEnabled(True)
++
++        # Append playlist to the list of existing playlists if it does not exist in it
++        if self.le_playlist_name.text() not in self.cb_playlist_selection.all_items():
++            self.cb_playlist_selection.addItem(self.le_playlist_name.text())
++
++        self.le_playlist_name.clear()
++        self.cb_playlist_selection.setCurrentIndex(0)
++
++# *** Method(s) that affect Playlist table ***
++    @qtc.Slot(tuple)
++    def add_song_to_playlist(self, song: tuple) -> None:
++        """
++        Adds a song to the playlist.
++
++        :param song: The song to be added to the playlist.
++        :return:
++        """
++        self.table_songs_in_playlist_model.insert_row(
++            position=self.table_songs_in_playlist_model.rowCount(),
++            row=1,
++            data=song
++        )
++        self.btn_save_button.setEnabled(True)
++        self.btn_undo_changes_button.setEnabled(True)
++        self.playlist_has_been_modified = True
++
++    @qtc.Slot(int)
++    def song_to_remove_from_playlist(self, song_index: int) -> None:
++        """
++        Removes a song from the playlist.
++
++        :param song_index: The index of the song to be removed from the playlist.
++        :return:
++        """
++        self.table_songs_in_playlist_model.removeRow(position=song_index)
++        self.btn_save_button.setEnabled(True)
++        self.btn_undo_changes_button.setEnabled(True)
++        self.playlist_has_been_modified = True
++
++    @qtc.Slot(tuple)
++    def update_playlist_table(self, songs_list: tuple) -> None:
++        """
++        Updates the playlist table with the given songs list.
++
++        :param songs_list: The songs list to be updated.
++        """
++        self.progress_bar.reset()
++        self.table_songs_in_playlist_model.insert_rows(
++            position=self.table_songs_in_playlist_model.rowCount(),
++            rows=len(songs_list),
++            data=reversed(songs_list) # reversing the order so it matches the order in the playlist
++        )
++
++        self.le_walkman_music_folder.setEnabled(True)
++        self.btn_select_walkman_music_folder.setEnabled(True)
++        self.cb_playlist_selection.setEnabled(True)
++        self.table_songs_in_playlist_view.setEnabled(True)
++        self.music_folder_tree_view.setEnabled(True)
++
++        if self.cb_playlist_selection.currentIndex() == 1:
++            self.le_playlist_name.setEnabled(True)
++        elif self.cb_playlist_selection.currentIndex() >= 2:
++            self.btn_delete_button.setEnabled(True)
++
++        self.playlist_has_been_modified = False
++
++# *** Method(s) that launch a messagebox ***
++    @qtc.Slot(object)
++    def messagebox_system_error_detected(self, error: ErrorEnum) -> None:
++        """
++        Launches the messagebox to inform the user a system error had occurred.
++
++        :return:
++        """
++        message = ''
++        match error:
++            case ErrorEnum.SCAN_FOLDER_ERROR:
++                message = 'An error occurred while scanning the folder.'
++            case ErrorEnum.SAVE_PLAYLIST_ERROR:
++                message = 'An error occurred while saving the playlist.'
++            case ErrorEnum.EXTRACT_SONGS_ERROR:
++                message = 'An error occurred while extracting the songs from the playlist.'
++            case ErrorEnum.DELETE_PLAYLIST_ERROR:
++                message = 'An error occurred while deleting the playlist.'
++
++        response = qtw.QMessageBox.critical(
++            self,
++            'System Error',
++            message
++        )
++
++        if response == qtw.QMessageBox.StandardButton.Ok:
++            self.progress_bar.reset()
++
++            # Enable the correct widgets based on error raised
++            match error:
++                case ErrorEnum.SCAN_FOLDER_ERROR:
++                    self.le_walkman_music_folder.setEnabled(True)
++                    self.btn_select_walkman_music_folder.setEnabled(True)
++
++                case ErrorEnum.SAVE_PLAYLIST_ERROR:
++                    self.le_walkman_music_folder.setEnabled(True)
++                    self.btn_select_walkman_music_folder.setEnabled(True)
++                    self.cb_playlist_selection.setEnabled(True)
++                    self.table_songs_in_playlist_view.setEnabled(True)
++                    self.music_folder_tree_view.setEnabled(True)
++                    self.btn_save_button.setEnabled(True)
++                    self.btn_undo_changes_button.setEnabled(True)
++
++                    if self.cb_playlist_selection.currentIndex() == 1:
++                        self.le_playlist_name.setEnabled(True)
++                    elif self.cb_playlist_selection.currentIndex() >= 2:
++                        self.btn_delete_button.setEnabled(True)
++
++                case ErrorEnum.EXTRACT_SONGS_ERROR:
++                    self.cb_playlist_selection.setEnabled(True)
++                    self.le_playlist_name.clear()
++                    self.cb_playlist_selection.setCurrentIndex(0)
++
++                case ErrorEnum.DELETE_PLAYLIST_ERROR:
++                    self.le_walkman_music_folder.setEnabled(True)
++                    self.btn_select_walkman_music_folder.setEnabled(True)
++                    self.cb_playlist_selection.setEnabled(True)
++                    self.table_songs_in_playlist_view.setEnabled(True)
++                    self.music_folder_tree_view.setEnabled(True)
++                    self.btn_delete_button.setEnabled(True)
++
++                    if self.playlist_has_been_modified:
++                        self.btn_save_button.setEnabled(True)
++                        self.btn_undo_changes_button.setEnabled(True)
++
++# *** Method(s) that are private
++    def _disable_all_widgets(self) -> None:
++        self.le_walkman_music_folder.setEnabled(False)
++        self.btn_select_walkman_music_folder.setEnabled(False)
++        self.cb_playlist_selection.setEnabled(False)
++        self.le_playlist_name.setEnabled(False)
++        self.table_songs_in_playlist_view.setEnabled(False)
++        self.music_folder_tree_view.setEnabled(False)
++        self.btn_save_button.setEnabled(False)
++        self.btn_delete_button.setEnabled(False)
++        self.btn_undo_changes_button.setEnabled(False)
+\ No newline at end of file
+diff --git a/tests/test_extract_songs_from_playlist.py b/tests/test_extract_songs_from_playlist.py
+new file mode 100644
+index 0000000..ac6cb38
+--- /dev/null
++++ b/tests/test_extract_songs_from_playlist.py
+@@ -0,0 +1,20 @@
++from src.functions import extract_songs_from_playlist
++from pyfakefs.fake_filesystem_unittest import TestCase
++
++class TestExtractSongsFromPlaylist(TestCase):
++    def setUp(self):
++        self.setUpPyfakefs()
++
++        self.fs.create_file('/bar/playlist.M3U8', contents="#EXTM3U\n#EXTINF:,\nbob/V/01 - epic song.flac\n#EXTINF:,\nSega/Sonic Songs/02 - sonic theme song.mp3\n#EXTINF:,\nLarry Luu/Great Hits/super super!.m4a\n")
++
++    def test_extract_songs_from_playlist(self):
++        songs_in_playlist = (
++            ('bob', 'V', '01 - epic song.flac'),
++            ('Sega', 'Sonic Songs', '02 - sonic theme song.mp3'),
++            ('Larry Luu', 'Great Hits', 'super super!.m4a')
++        )
++        playlist_name = 'playlist'
++
++        songs_found = extract_songs_from_playlist(playlist_name, '/bar')
++
++        assert songs_found == songs_in_playlist, print(songs_found, songs_in_playlist)
+\ No newline at end of file
+diff --git a/tests/test_generate_playlist.py b/tests/test_generate_playlist.py
+new file mode 100644
+index 0000000..8f77ff7
+--- /dev/null
++++ b/tests/test_generate_playlist.py
+@@ -0,0 +1,27 @@
++import os
++from src.functions import generate_playlist
++from pyfakefs.fake_filesystem_unittest import TestCase
++
++class TestGeneratePlaylist(TestCase):
++    def setUp(self):
++        self.setUpPyfakefs()
++        self.fs.create_dir('/bar')
++
++    def test_generates_playlist(self):
++        list_of_songs = [
++            ('bob', 'V', '01 - epic song.flac'),
++            ('Sega', 'Sonic Songs', '02 - sonic theme song.mp3'),
++            ('Larry Luu', 'Great Hits', 'super super!.m4a')
++        ]
++        name_of_playlist = 'my epic playlist'
++
++        generate_playlist(list_of_songs, name_of_playlist, '/bar')
++
++        assert (name_of_playlist + '.M3U8') in os.listdir('/bar')
++
++        # read the file back and confirm the file has been correctly written
++        correct_file_contents = "#EXTM3U\n#EXTINF:,\nbob/V/01 - epic song.flac\n#EXTINF:,\nSega/Sonic Songs/02 - sonic theme song.mp3\n#EXTINF:,\nLarry Luu/Great Hits/super super!.m4a\n"
++
++        with open('/bar/' + name_of_playlist + '.M3U8') as f:
++            f_content = f.read()
++            assert f_content == correct_file_contents, print(f_content, correct_file_contents)
+diff --git a/tests/test_music_file_condition.py b/tests/test_music_file_condition.py
+new file mode 100644
+index 0000000..c66d2f6
+--- /dev/null
++++ b/tests/test_music_file_condition.py
+@@ -0,0 +1,23 @@
++from src.functions import music_file_condition
++
++class TestMusicFileCondition:
++
++    def test_music_file_mp3_extension(self):
++        file = '01 - epic song.mp3'
++
++        assert music_file_condition(file) is True
++
++    def test_music_file_wav_extension(self):
++        file = '01 - epic song.wav'
++
++        assert music_file_condition(file) is True
++
++    def test_music_file_m4a_extension(self):
++        file = '01 - epic song.m4a'
++
++        assert music_file_condition(file) is True
++
++    def test_music_file_flac_extension(self):
++        file = '01 - epic song.flac'
++
++        assert music_file_condition(file) is True
+\ No newline at end of file
+diff --git a/tests/test_scan_for_playlists.py b/tests/test_scan_for_playlists.py
+new file mode 100644
+index 0000000..70c98b0
+--- /dev/null
++++ b/tests/test_scan_for_playlists.py
+@@ -0,0 +1,38 @@
++from src.functions import scan_for_playlists, walkman_playlist_checker
++from pyfakefs.fake_filesystem_unittest import TestCase
++
++class TestScanForPlaylists(TestCase):
++
++    def setUp(self):
++        self.setUpPyfakefs()
++
++        # fake directory for testing successful playlist finding
++        self.fs.create_file('/foo/playlist1.M3U8')
++        self.fs.create_file('/foo/playlist2.txt')
++        self.fs.create_file('/foo/playlist3.M3U8')
++        self.fs.create_file('/foo/playlist4.txt')
++        self.fs.create_file('/foo/playlist5.M3U8')
++        self.fs.create_file('/foo/playlist6.txt')
++
++        # fake directory for testing successful non-playlist finding
++        self.fs.create_file('/bar/playlist1.txt')
++        self.fs.create_file('/bar/playlist2.txt')
++        self.fs.create_file('/bar/playlist3.txt')
++        self.fs.create_file('/bar/playlist4.txt')
++        self.fs.create_file('/bar/playlist5.txt')
++        self.fs.create_file('/bar/playlist6.txt')
++
++    def test_finds_playlists(self):
++
++        playlists_to_find = ['playlist1', 'playlist3', 'playlist5']
++
++        playlists_found = scan_for_playlists('/foo', walkman_playlist_checker)
++
++        assert playlists_to_find == playlists_found, print(playlists_to_find, playlists_found)
++
++    def test_finds_no_playlists(self):
++        playlists_to_find = []
++
++        playlists_found = scan_for_playlists('/bar', walkman_playlist_checker)
++
++        assert playlists_to_find == playlists_found, print(playlists_to_find, playlists_found)
+\ No newline at end of file
+diff --git a/tests/test_walkman_playlist_checker.py b/tests/test_walkman_playlist_checker.py
+new file mode 100644
+index 0000000..4a5d78b
+--- /dev/null
++++ b/tests/test_walkman_playlist_checker.py
+@@ -0,0 +1,11 @@
++from src.functions.walkman_playlist_checker import walkman_playlist_checker
++
++class TestWalkmanPlaylistChecker:
++
++    def test_detects_playlist(self):
++        file = 'playlist.M3U8'
++        assert walkman_playlist_checker(file)
++
++    def test_detects_no_playlist(self):
++        file = 'playlist.txt'
++        assert not walkman_playlist_checker(file)
+\ No newline at end of file
