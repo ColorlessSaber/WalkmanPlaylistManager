@@ -31,9 +31,9 @@ class Model(qtc.QObject):
         :return:
         """
         scan_music_folder_thread = ScanMusicFolderThread(directory)
-        scan_music_folder_thread.signals.progress.connect(self.signal_update_progress.emit)
-        scan_music_folder_thread.signals.error.connect(self.signal_error_message.emit)
-        scan_music_folder_thread.signals.finished.connect(self.signal_analysis_of_music_folder.emit)
+        scan_music_folder_thread.signals.progress.connect(self.signal_update_progress)
+        scan_music_folder_thread.signals.error.connect(self.signal_error_message)
+        scan_music_folder_thread.signals.finished.connect(self.signal_analysis_of_music_folder)
         self.thread_pool.start(scan_music_folder_thread)
 
     @qtc.Slot(str)
@@ -46,9 +46,9 @@ class Model(qtc.QObject):
         :return:
         """
         extract_songs_from_playlist_thread = ExtractSongsFromPlaylistThread(playlist_name, playlist_path)
-        extract_songs_from_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
-        extract_songs_from_playlist_thread.signals.error.connect(self.signal_error_message.emit)
-        extract_songs_from_playlist_thread.signals.finished.connect(self.signal_analysis_of_playlist.emit)
+        extract_songs_from_playlist_thread.signals.progress.connect(self.signal_update_progress)
+        extract_songs_from_playlist_thread.signals.error.connect(self.signal_error_message)
+        extract_songs_from_playlist_thread.signals.finished.connect(self.signal_analysis_of_playlist)
         self.thread_pool.start(extract_songs_from_playlist_thread)
 
     @qtc.Slot(tuple)
@@ -61,9 +61,9 @@ class Model(qtc.QObject):
         :return:
         """
         save_playlist_thread = SavingPlaylistThread(*playlist_info)
-        save_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
-        save_playlist_thread.signals.error.connect(self.signal_error_message.emit)
-        save_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_saved.emit)
+        save_playlist_thread.signals.progress.connect(self.signal_update_progress)
+        save_playlist_thread.signals.error.connect(self.signal_error_message)
+        save_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_saved)
         self.thread_pool.start(save_playlist_thread)
 
     @qtc.Slot(tuple)
@@ -75,7 +75,7 @@ class Model(qtc.QObject):
         :return:
         """
         delete_playlist_thread = DeletePlaylistThread(*playlist_info)
-        delete_playlist_thread.signals.progress.connect(self.signal_update_progress.emit)
-        delete_playlist_thread.signals.error.connect(self.signal_error_message.emit)
-        delete_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_deleted.emit)
+        delete_playlist_thread.signals.progress.connect(self.signal_update_progress)
+        delete_playlist_thread.signals.error.connect(self.signal_error_message)
+        delete_playlist_thread.signals.finished.connect(self.signal_playlist_successfully_deleted)
         self.thread_pool.start(delete_playlist_thread)
