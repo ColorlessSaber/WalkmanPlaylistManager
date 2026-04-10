@@ -1,3 +1,4 @@
+import logging
 from PySide6 import QtCore as qtc
 from ..classes import (
     DefaultThreadSignals,
@@ -25,6 +26,7 @@ class ScanMusicFolderThread(qtc.QRunnable):
             music_folder_info = scan_for_playlists(self.music_folder_path, walkman_playlist_checker, self.signals.progress)
             self.signals.progress.emit(100)
         except OSError:
+            logging.exception("OSError, scanning music folder")
             self.signals.error.emit(ErrorEnum.SCAN_FOLDER_ERROR)
         else:
             self.signals.finished.emit(music_folder_info)

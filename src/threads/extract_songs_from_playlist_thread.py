@@ -1,3 +1,4 @@
+import logging
 from PySide6 import QtCore as qtc
 from ..classes import (
     DefaultThreadSignals,
@@ -23,6 +24,7 @@ class ExtractSongsFromPlaylistThread(qtc.QRunnable):
             songs_in_playlist = extract_songs_from_playlist(self.name_of_playlist, self.path_to_playlist)
             self.signals.progress.emit(100)
         except OSError:
+            logging.exception("OSError, extracting songs from playlist")
             self.signals.error.emit(ErrorEnum.EXTRACT_SONGS_ERROR)
         else:
             self.signals.finished.emit(songs_in_playlist)

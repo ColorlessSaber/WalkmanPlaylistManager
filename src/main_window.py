@@ -4,6 +4,7 @@ from PySide6 import (
 
 from .view import View
 from .model import Model
+from .functions import build_app_directory, setup_logger
 
 class MainWindow(qtw.QMainWindow):
     """The main window for the application"""
@@ -11,6 +12,11 @@ class MainWindow(qtw.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # set up the application directory
+        build_app_directory()
+        setup_logger()
+
+        # set up the model and view
         self.view = View()
         self.model = Model()
         self.setCentralWidget(self.view)

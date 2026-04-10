@@ -1,4 +1,5 @@
 import pathlib
+import logging
 from PySide6 import QtCore as qtc
 from ..classes import (
     DefaultThreadSignals,
@@ -25,6 +26,7 @@ class DeletePlaylistThread(qtc.QRunnable):
             file_path.unlink()
             self.signals.progress.emit(100)
         except FileNotFoundError:
+            logging.exception('File not found')
             self.signals.error.emit(ErrorEnum.DELETE_PLAYLIST_ERROR)
         else:
             self.signals.finished.emit()

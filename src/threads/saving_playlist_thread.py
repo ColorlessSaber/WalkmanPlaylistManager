@@ -1,3 +1,4 @@
+import logging
 from PySide6 import QtCore as qtc
 from ..classes import (
     DefaultThreadSignals,
@@ -25,6 +26,7 @@ class SavingPlaylistThread(qtc.QRunnable):
             generate_playlist(self.list_of_songs, self.name_of_playlist, self.save_location)
             self.signals.progress.emit(100)
         except OSError:
+            logging.exception("OSError, saving playlist thread")
             self.signals.error.emit(ErrorEnum.SAVE_PLAYLIST_ERROR)
         else:
             self.signals.finished.emit()
