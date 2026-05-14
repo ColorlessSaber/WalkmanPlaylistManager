@@ -1,4 +1,13 @@
+import logging
 from PySide6 import QtCore as qtc
+from .functions import (
+    build_app_directory,
+    setup_app_logger,
+    setup_app_settings_file,
+    load_app_settings,
+    save_app_settings,
+    delete_then_recreate_log_file,
+)
 from .threads import (
     ScanMusicFolderThread,
     SavingPlaylistThread,
@@ -19,7 +28,53 @@ class Model(qtc.QObject):
     signal_playlist_successfully_saved = qtc.Signal()
     signal_playlist_successfully_deleted = qtc.Signal()
 
+    def __init__(self):
+        super().__init__()
+        self.__app_settings_data = {}
+
+# *** Methods that access Model or application files ***
+    @property
+    def preferences_data(self):
+        return self.__app_settings_data.get("preferences")
+
+    def build_app_directory_and_setup_logger(self) -> None:
+        """
+        Builds the app directory and sets up the logger for the application.
+
+        :return:
+        """
+        build_app_directory()
+        setup_app_settings_file()
+        self.__app_settings_data = load_app_settings()
+
+        logging_level_from_settings_file = (
+            self.__app_settings_data.get("preferences")
+            .get("logging_settings")
+            .get("level")
+        )
+        setup_app_logger(logging_level_from_settings_file)
+
 # *** Methods that don't use threads to complete a task ***
+    @qtc.Slot(dict)
+    def save_new_app_preferences_to_json_file(self, new_pref_settings: dict) -> None:
+        """
+        Saves the new preferences to a json file that is located in the application directory.
+
+        :param new_pref_settings: The new preferences settings to save.
+        :return:
+        """
+        logging.info("saving new preferences to json file")
+        self.__app_settings_data["preferences"] = new_pref_settings
+        save_app_settings(self.__app_settings_data)
+
+    @qtc.Slot()
+    def remove_then_make_new_log_file(self) -> None:
+        """
+        Removes the existing log file, and then recreates them.
+
+        :return:
+        """
+        delete_then_recreate_log_file()
 
 # *** Methods that use threads to complete a task ***
     @qtc.Slot(str)
