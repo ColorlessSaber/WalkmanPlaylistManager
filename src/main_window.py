@@ -4,17 +4,13 @@ from PySide6 import (
 
 from .view import View
 from .model import Model
-from .functions import build_app_directory, setup_logger
+
 
 class MainWindow(qtw.QMainWindow):
     """The main window for the application"""
 
     def __init__(self):
         super().__init__()
-
-        # set up the application directory
-        build_app_directory()
-        setup_logger()
 
         # set up the model and view
         self.view = View()
@@ -39,6 +35,8 @@ class MainWindow(qtw.QMainWindow):
         self.model.signal_error_message.connect(self.view.messagebox_system_error_detected)
         self.model.signal_playlist_successfully_saved.connect(self.view.reset_interface_after_saving_playlist)
         self.model.signal_playlist_successfully_deleted.connect(self.view.reset_interface_after_deleting_playlist)
+
+        self.model.build_app_directory_and_setup_logger()
 
         self.show()
 
