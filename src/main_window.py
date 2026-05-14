@@ -4,6 +4,7 @@ from PySide6 import (
 
 from .view import View
 from .model import Model
+from .pop_up_windows import ApplicationPreferencesWindow
 
 
 class MainWindow(qtw.QMainWindow):
@@ -21,6 +22,14 @@ class MainWindow(qtw.QMainWindow):
             1200  # height
         )
         self.setWindowTitle("Walkman Playlist Manager")
+
+        # setup menu bar
+        menubar = qtw.QMenuBar()
+
+        main_menu = menubar.addMenu("Walkman Playlist Manager")
+        main_menu.addAction("Preferences...", self.open_preferences_window)
+
+        self.setMenuBar(menubar)
 
         # view signals that connect to the model slots
         self.view.signal_initiate_scan_of_music_folder.connect(self.model.start_scan_of_music_folder_thread)
@@ -41,6 +50,20 @@ class MainWindow(qtw.QMainWindow):
         self.show()
 
     # *** Main Window Methods ***
+    def open_preferences_window(self) -> None:
+        """
+        Launches the preferences window.
+
+        :return:
+        """
+        preferences_settings_data = self.model.preferences_data
+        application_preferences_window = ApplicationPreferencesWindow(preferences_settings_data)
+        application_preferences_window.signal_save_new_preferences_settings.connect(
+            self.model.save_new_app_preferences_to_json_file
+        )
+        application_preferences_window.signal_clear_log_file.connect(self.model.remove_then_make_new_log_file)
+        application_preferences_window.exec()
+
     def closeEvent(self, event) -> None:
         """
         Close the application gracefully.
