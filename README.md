@@ -62,7 +62,7 @@ Please check VERSION_HISTORY.md for detail information on what new features are 
 
 <!-- License -->
 ## License
-Distributed under the MIT License. See 'LICENSE.txt' for more information.
+Distributed under the GPL-3.0 License. See 'LICENSE.txt' for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
